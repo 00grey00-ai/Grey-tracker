@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Grey Tracker">
+<meta name="theme-color" content="#0a0a0a">
+<title>Grey Tracker</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #0a0a0a;
+  --surface: #141414;
+  --surface2: #1c1c1c;
+  --border: #252525;
+  --accent: #e8c547;
+  --accent-dim: #7a6824;
+  --accent-bg: #1a1600;
+  --text: #e0e0e0;
+  --muted: #555;
+  --muted2: #333;
+  --green: #2ecc71;
+  --green-dim: #1a4a2e;
+  --red: #e74c3c;
+  --blue: #3498db;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* ── NAV ── */
+#nav {
+  position: fixed;
+  bottom: 0;
+  left: 0; right: 0;
+  height: calc(56px + var(--safe-bottom));
+  padding-bottom: var(--safe-bottom);
+  background: #0f0f0f;
+  border-top: 1px solid var(--border);
+  display: flex;
+  z-index: 100;
+}
+
+.nav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.15s;
+  padding-bottom: 2px;
+}
+
+.nav-btn.active { color: var(--accent); }
+.nav-btn svg { width: 20px; height: 20px; }
+
+/* ── PAGES ── */
+#app {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  bottom: calc(56px + var(--safe-bottom));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-top: calc(var(--safe-top) + 0px);
+}
+
+.page { display: none; min-height: 100%; }
+.page.active { display: block; }
+
+/* ── PAGE HEADER ── */
+.page-header {
+  padding: 20px 20px 12px;
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 10;
+  border-bottom: 1px solid var(--border);
+}
+
+.page-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 32px;
+  letter-spacing: 2px;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.page-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+
+/* ── DASHBOARD ── */
+.dash-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 16px;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 14px;
+  border-radius: 2px;
+}
+
+.stat-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.stat-value {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px;
+  color: var(--accent);
+  letter-spacing: 1px;
+  line-height: 1.1;
+  margin-top: 4px;
+}
+
+.stat-unit {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.stat-delta {
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.delta-down { color: var(--green); }
+.delta-up { color: var(--red); }
+.delta-none { color: var(--muted); }
+
+.section-head {
+  padding: 16px 16px 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.recent-log-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  margin: 0 0 1px;
+}
+
+.log-date {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.log-desc {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.log-val {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  color: var(--accent);
+}
+
+/* ── WEIGHT LOG ── */
+.form-block {
+  margin: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 16px;
+  border-radius: 2px;
+}
+
+.form-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 2px;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+.form-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 80px;
+}
+
+.field label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.field input, .field select, .field textarea {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  padding: 10px 12px;
+  border-radius: 2px;
+  width: 100%;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.field input:focus, .field select:focus, .field textarea:focus {
+  border-color: var(--accent-dim);
+}
+
+.field textarea {
+  resize: vertical;
+  min-height: 70px;
+  font-size: 13px;
+}
+
+.btn {
+  background: var(--accent);
+  color: #000;
+  border: none;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 2px;
+  padding: 12px 20px;
+  cursor: pointer;
+  border-radius: 2px;
+  width: 100%;
+  margin-top: 4px;
+  transition: opacity 0.15s;
+}
+
+.btn:active { opacity: 0.8; }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px;
+  letter-spacing: 2px;
+  padding: 9px 16px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.btn-ghost:active { color: var(--accent); border-color: var(--accent-dim); }
+
+.btn-danger {
+  background: transparent;
+  color: var(--red);
+  border: 1px solid #3a1a1a;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 12px;
+  letter-spacing: 1px;
+  padding: 4px 10px;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.log-list {
+  margin: 0 0 80px;
+}
+
+.log-entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.log-entry:nth-child(odd) { background: var(--surface); }
+
+.entry-left { flex: 1; }
+.entry-date {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+}
+.entry-main {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px;
+  color: var(--text);
+  letter-spacing: 1px;
+}
+.entry-note {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 1px;
+  font-style: italic;
+}
+
+.entry-delta-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 2px;
+  margin-right: 8px;
+}
+
+.tag-down { background: var(--green-dim); color: var(--green); }
+.tag-up { background: #3a1a1a; color: var(--red); }
+.tag-same { background: var(--muted2); color: var(--muted); }
+
+/* ── WORKOUT PAGE ── */
+.day-tabs {
+  display: flex;
+  padding: 12px 16px;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.day-tabs::-webkit-scrollbar { display: none; }
+
+.day-tab {
+  flex-shrink: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 2px;
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.15s;
+}
+
+.day-tab.active {
+  background: var(--accent-bg);
+  border-color: var(--accent-dim);
+  color: var(--accent);
+}
+
+.workout-day { display: none; }
+.workout-day.active { display: block; }
+
+.day-focus-label {
+  padding: 0 16px 12px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.exercise-card {
+  margin: 0 16px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.ex-card-header {
+  padding: 12px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+
+.ex-card-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.ex-card-target {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--accent);
+}
+
+.ex-card-note {
+  padding: 6px 14px;
+  font-size: 11px;
+  color: var(--muted);
+  font-style: italic;
+  border-bottom: 1px solid var(--border);
+}
+
+.sets-area {
+  padding: 10px 14px;
+}
+
+.set-row {
+  display: grid;
+  grid-template-columns: 28px 1fr 1fr auto;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.set-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.set-input {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 14px;
+  padding: 7px 10px;
+  border-radius: 2px;
+  width: 100%;
+  outline: none;
+  text-align: center;
+  -webkit-appearance: none;
+}
+
+.set-input:focus { border-color: var(--accent-dim); }
+
+.set-input::placeholder { color: var(--muted2); font-size: 12px; }
+
+.set-done-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.set-done-btn.done {
+  background: var(--green);
+  border-color: var(--green);
+}
+
+.set-done-btn svg { width: 14px; height: 14px; }
+
+.cardio-card {
+  margin: 0 16px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--green);
+  padding: 14px;
+  border-radius: 2px;
+}
+
+.cardio-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 2px;
+  color: var(--green);
+  margin-bottom: 10px;
+}
+
+.cardio-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+.section-divider {
+  padding: 12px 16px 6px;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+}
+
+.save-workout-bar {
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+/* ── PHOTOS ── */
+.photo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  padding: 0 0 80px;
+}
+
+.photo-thumb {
+  aspect-ratio: 3/4;
+  background: var(--surface);
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+}
+
+.photo-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-meta {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: linear-gradient(transparent, rgba(0,0,0,0.85));
+  padding: 20px 8px 8px;
+}
+
+.photo-date-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: rgba(255,255,255,0.7);
+}
+
+.photo-weight-tag {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  color: var(--accent);
+  letter-spacing: 1px;
+}
+
+.photo-add-btn {
+  position: fixed;
+  bottom: calc(72px + var(--safe-bottom));
+  right: 16px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(232,197,71,0.3);
+  z-index: 50;
+}
+
+.photo-add-btn svg { width: 24px; height: 24px; }
+
+#photoInput { display: none; }
+
+/* ── HISTORY ── */
+.history-group {
+  margin-bottom: 2px;
+}
+
+.history-group-header {
+  padding: 10px 16px;
+  background: var(--surface2);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  border-bottom: 1px solid var(--border);
+}
+
+.history-session {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+}
+
+.history-session-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.history-day-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  letter-spacing: 1px;
+  color: var(--accent);
+}
+
+.history-date {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.history-ex-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 0;
+  font-size: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.history-ex-row:last-child { border-bottom: none; }
+.history-ex-name { color: var(--muted); }
+.history-ex-val { font-family: 'DM Mono', monospace; color: var(--text); font-size: 11px; }
+
+.history-bike-row {
+  margin-top: 6px;
+  padding: 6px 8px;
+  background: var(--green-dim);
+  border-radius: 2px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--green);
+}
+
+/* ── TOAST ── */
+#toast {
+  position: fixed;
+  bottom: calc(70px + var(--safe-bottom));
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--accent);
+  color: #000;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px;
+  letter-spacing: 2px;
+  padding: 10px 20px;
+  border-radius: 2px;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+  z-index: 200;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+#toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── MODAL ── */
+#modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 150;
+  align-items: flex-end;
+}
+
+#modal-overlay.open { display: flex; }
+
+.modal {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 20px;
+  padding-bottom: calc(20px + var(--safe-bottom));
+  border-radius: 8px 8px 0 0;
+}
+
+.modal-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px;
+  letter-spacing: 2px;
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+
+.modal-close {
+  float: right;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 24px;
+  cursor: pointer;
+  line-height: 1;
+  margin-top: -4px;
+}
+
+/* ── PHOTO VIEWER ── */
+#photo-viewer {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 160;
+  flex-direction: column;
+}
+
+#photo-viewer.open { display: flex; }
+
+#photo-viewer img {
+  flex: 1;
+  object-fit: contain;
+  width: 100%;
+}
+
+.viewer-bar {
+  padding: 16px;
+  padding-bottom: calc(16px + var(--safe-bottom));
+  background: var(--bg);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.viewer-info {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.viewer-weight {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  color: var(--accent);
+}
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  text-align: center;
+  padding: 60px 32px;
+  color: var(--muted);
+}
+
+.empty-state svg { margin-bottom: 16px; opacity: 0.3; }
+
+.empty-state p {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ── DASHBOARD ── -->
+  <div class="page active" id="page-dash">
+    <div class="page-header">
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub">Grey · Target 200 lbs</div>
+    </div>
+    <div class="dash-stats">
+      <div class="stat-card">
+        <div class="stat-label">Current Weight</div>
+        <div class="stat-value" id="dash-weight">—</div>
+        <div class="stat-unit">lbs</div>
+        <div class="stat-delta" id="dash-weight-delta"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Lost So Far</div>
+        <div class="stat-value" id="dash-lost">—</div>
+        <div class="stat-unit">lbs from 250</div>
+        <div class="stat-delta" id="dash-to-goal"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Workouts Logged</div>
+        <div class="stat-value" id="dash-workouts">0</div>
+        <div class="stat-unit">sessions</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Photos Taken</div>
+        <div class="stat-value" id="dash-photos">0</div>
+        <div class="stat-unit">check-ins</div>
+      </div>
+    </div>
+
+    <div class="section-head">Recent Weight</div>
+    <div id="dash-recent-weight"></div>
+
+    <div class="section-head">Recent Workouts</div>
+    <div id="dash-recent-workouts"></div>
+  </div>
+
+  <!-- ── WEIGHT ── -->
+  <div class="page" id="page-weight">
+    <div class="page-header">
+      <div class="page-title">Body Weight</div>
+      <div class="page-sub">Log your weight</div>
+    </div>
+
+    <div class="form-block">
+      <div class="form-title">Log Weight</div>
+      <div class="form-row">
+        <div class="field">
+          <label>Weight (lbs)</label>
+          <input type="number" id="w-weight" placeholder="250" step="0.1" inputmode="decimal">
+        </div>
+        <div class="field">
+          <label>Date</label>
+          <input type="date" id="w-date">
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:10px">
+        <label>Note (optional)</label>
+        <input type="text" id="w-note" placeholder="e.g. after workout, morning">
+      </div>
+      <button class="btn" onclick="logWeight()">LOG WEIGHT</button>
+    </div>
+
+    <div class="section-head">History</div>
+    <div class="log-list" id="weight-log-list"></div>
+  </div>
+
+  <!-- ── WORKOUT ── -->
+  <div class="page" id="page-workout">
+    <div class="page-header">
+      <div class="page-title">Workout</div>
+      <div class="page-sub">Log your session</div>
+    </div>
+
+    <div class="day-tabs">
+      <button class="day-tab active" onclick="selectDay(0, this)">Day 1</button>
+      <button class="day-tab" onclick="selectDay(1, this)">Day 2</button>
+      <button class="day-tab" onclick="selectDay(2, this)">Day 3</button>
+      <button class="day-tab" onclick="selectDay(3, this)">Day 4</button>
+    </div>
+
+    <!-- DAY 1 -->
+    <div class="workout-day active" id="day-0">
+      <div class="day-focus-label">Upper Push · Chest · Shoulders · Triceps</div>
+
+      <div class="section-divider">Chest</div>
+      <div class="exercise-card" data-ex="Chest Press Machine">
+        <div class="ex-card-header"><span class="ex-card-name">Chest Press Machine</span><span class="ex-card-target">3 × 10–12</span></div>
+        <div class="ex-card-note">Controlled, full range</div>
+        <div class="sets-area" id="sets-d0-chest-press"></div>
+      </div>
+      <div class="exercise-card" data-ex="Cable Fly Low to High">
+        <div class="ex-card-header"><span class="ex-card-name">Cable Fly (Low to High)</span><span class="ex-card-target">3 × 12</span></div>
+        <div class="ex-card-note">Squeeze at top</div>
+        <div class="sets-area" id="sets-d0-cable-fly"></div>
+      </div>
+      <div class="exercise-card" data-ex="Incline Dumbbell Press">
+        <div class="ex-card-header"><span class="ex-card-name">Incline Dumbbell Press</span><span class="ex-card-target">3 × 10</span></div>
+        <div class="ex-card-note">45° bench</div>
+        <div class="sets-area" id="sets-d0-incline-db"></div>
+      </div>
+
+      <div class="section-divider">Shoulders</div>
+      <div class="exercise-card" data-ex="Shoulder Press Machine">
+        <div class="ex-card-header"><span class="ex-card-name">Shoulder Press Machine</span><span class="ex-card-target">3 × 10–12</span></div>
+        <div class="ex-card-note">Seated, no lower back strain</div>
+        <div class="sets-area" id="sets-d0-shoulder-press"></div>
+      </div>
+      <div class="exercise-card" data-ex="Lateral Raise">
+        <div class="ex-card-header"><span class="ex-card-name">Lateral Raise (Dumbbell)</span><span class="ex-card-target">3 × 15</span></div>
+        <div class="ex-card-note">Light, strict form</div>
+        <div class="sets-area" id="sets-d0-lateral-raise"></div>
+      </div>
+
+      <div class="section-divider">Triceps</div>
+      <div class="exercise-card" data-ex="Tricep Pushdown">
+        <div class="ex-card-header"><span class="ex-card-name">Tricep Pushdown (Cable)</span><span class="ex-card-target">3 × 12</span></div>
+        <div class="ex-card-note">Rope or bar</div>
+        <div class="sets-area" id="sets-d0-tri-pushdown"></div>
+      </div>
+      <div class="exercise-card" data-ex="Overhead Tricep Extension">
+        <div class="ex-card-header"><span class="ex-card-name">Overhead Tricep Extension</span><span class="ex-card-target">2 × 12</span></div>
+        <div class="ex-card-note">Dumbbell or cable</div>
+        <div class="sets-area" id="sets-d0-tri-ext"></div>
+      </div>
+
+      <div class="section-divider">Cardio</div>
+      <div class="cardio-card">
+        <div class="cardio-title">Stationary Bike</div>
+        <div class="cardio-fields">
+          <div class="field"><label>Time (min)</label><input class="set-input" id="d0-bike-time" type="number" placeholder="15" inputmode="numeric"></div>
+          <div class="field"><label>Resistance</label><input class="set-input" id="d0-bike-res" type="number" placeholder="5" inputmode="numeric"></div>
+          <div class="field"><label>Calories</label><input class="set-input" id="d0-bike-cal" type="number" placeholder="—" inputmode="numeric"></div>
+        </div>
+      </div>
+
+      <div class="save-workout-bar">
+        <button class="btn" onclick="saveWorkout(0)">SAVE DAY 1 SESSION</button>
+      </div>
+    </div>
+
+    <!-- DAY 2 -->
+    <div class="workout-day" id="day-1">
+      <div class="day-focus-label">Lower Body · Knee/Foot Safe</div>
+
+      <div class="section-divider">Legs — Machines Only</div>
+      <div class="exercise-card">
+        <div class="ex-card-header"><span class="ex-card-name">Leg Press</span><span class="ex-card-target">4 × 12</span></div>
+        <div class="ex-card-note">Feet high on plate, shallow depth — easy on knees</div>
+        <div class="sets-area" id="sets-d1-leg-press"></div>
+      </div>
+      <div class="exercise-card">
+        <div class="ex-card-header"><span class="ex-card-name">Leg Curl (Seated or Lying)</span><span class="ex-card-target">3 × 12</span></div>
+        <div class="ex-card-note">Hamstrings, no foot load</div>
+        <div class="sets-area" id="sets-d1-leg-curl"></div>
+      </div>
+      <div class="exercise-card">
+        <div class="ex-card-header"><span class="ex-card-name">Leg Extension</span><span class="ex-card-target">3 × 12</span></div>
+        <div class="ex-card-note">Light to moderate — don't force range</div>
+        <div class="sets-area" id="sets-d1-leg-ext"></div>
+      </div>
+      <div class="exercise-card">
+        <div class="ex-card-header"><span class="ex-card-name">Hip Abductor Machine</span><span class="ex-card-target">3 × 15</span></div>
+        <div class="ex-card-note">Outer glute/hip — stabilizes knees</div>
+        <div class="sets-area" id="sets-d1-hip-ab"></div>
+      </div>
+      <div class="exercise-card">
+        <div class="ex-card-header"><span class="ex-card-name">Hip Adductor Machine</span><span class="ex-card-target">3 × 15</span></div>
+        <div class="ex-card-note">Inner thigh balance</div>
+        <div class="sets-area" id="sets-d1-hip-ad"></div>
+      </div>
+      <div class="exercise-card">
+        <div class="ex-card-header"><span class="ex-card-name">Seated Calf Raise</span><span class="ex-card-target">3 × 15</span></div>
+        <div class="ex-card-note">Seated only — no standing calf raise yet</div>
+        <div class="sets-area" id="sets-d1-calf"></div>
+      </div>
+
+      <div class="section-divider">Cardio</div>
+      <div class="cardio-card">
+        <div class="cardio-title">Stationary Bike</div>
+        <div class="cardio-fields">
+          <div class="field"><label>Time (min)</label><input class="set-input" id="d1-bike-time" type="number" placeholder="20" inputmode="numeric"></div>
+          <div class="field"><label>Resistance</label><input class="set-input" id="d1-bike-res" type="number" placeholder="5" inputmode="numeric"></div>
+          <div class="field"><label>Calories</label><input class="set-input" id="d1-bike-cal" type="number" placeholder="—" inputmode="numeric"></div>
+        </div>
+      </div>
+
+      <div class="save-workout-bar">
+        <button class="btn" onclick="saveWorkout(1)">SAVE DAY 2 SESSION</button>
+      </div>
+    </div>
+
+    <!-- DAY 3 -->
+    <div class="workout-day" id="day-2">
+      <div class="day-focus-label">Upper Pull · Back · Biceps · Rear Delt</div>
+
+      <div class="section-divider">Back</div>
+      <div class="exercise-card">
+        <div class="ex-card-header"><span class="ex-card-name">Seated Cable Row</span><span class="ex-card-target">4 × 10–12</span></div>
+        <div class="ex-card-note">Drive elbows back, don't shrug</div>
+        <div class="sets-area" id="sets-d2-cable-row"></div>
+      </div>
+      <div class="exercise-card">
+        <div class="ex-card-header"><span class="ex-card-name">Lat Pulldown</span><span class="ex-card-target">3 × 10–12</span></div>
+        <div class="ex-card-note">Wide grip, chest up</div>
+        <div class="sets-area" id="sets-d2-lat-pull"></div>
+      </div>
+      <div class="exercise-card">
+        <div class="ex-card-header"><span class="ex-card-name">Machine Row</span><span class="ex-card-target">3 × 12</span></div>
+        <div class="ex-card-note">Chest supported if available</div>
+        <div class="sets-area" id="sets-d2-machine-row"></div>
+      </div>
+
+      <div class="section-divider">Rear Delts</div>
+      <div class="exercise-card">
+        <div class="ex-card-header"><span class="ex-card-name">Pec Deck Reverse Fly</span><span class="ex-card-target">3 × 15</span></div>
+        <div class="ex-card-note">Face away, arms wide</div>
+        <div class="sets-area" id="sets-d2-rev-fly"></div>
+      </div>
+      <div class="exercise-card">
+        <div class="ex-card-header"><span class="ex-card-name">Face Pull (Cable)</span><span class="ex-card-target">3 × 15</span></div>
+        <div class="ex-card-note">Rope, pull to forehead</div>
+        <div class="sets-area" id="sets-d2-face-pull"></div>
+      </div>
+
+      <div class="section-divider">Biceps</div>
+      <div class="exercise-card">
+        <div class="ex-card-header"><span class="ex-card-name">Dumbbell Curl</span><span class="ex-card-target">3 × 12</span></div>
+        <div class="ex-card-note">Alternating, controlled negative</div>
+        <div class="sets-area" id="sets-d2-db-curl"></div>
+      </div>
+      <div class="exercise-card">
+        <div class="ex-card-header"><span class="ex-card-name">Hammer Curl</span><span class="ex-card-target">2 × 12</span></div>
+        <div class="ex-card-note">Neutral grip, forearm work too</div>
+        <div class="sets-area" id="sets-d2-hammer"></div>
+      </div>
+
+      <div class="section-divider">Cardio</div>
+      <div class="cardio-card">
+        <div class="cardio-title">Stationary Bike</div>
+        <div class="cardio-fields">
+          <div class="field"><label>Time (min)</label><input class="set-input" id="d2-bike-time" type="number" placeholder="15" inputmode="numeric"></div>
+          <div class="field"><label>Resistance</label><input class="set-input" id="d2-bike-res" type="number" placeholder="5" inputmode="numeric"></div>
+          <div class="field"><label>Calories</label><input class="set-input" id="d2-bike-cal" type="number" placeholder="—" inputmode="numeric"></div>
+        </div>
+      </div>
+
+      <div class="save-workout-bar">
+        <button class="btn" onclick="saveWorkout(2)">SAVE DAY 3 SESSION</button>
+      </div>
+    </div>
+
+    <!-- DAY 4 -->
+    <div class="workout-day" id="day-3">
+      <div class="day-focus-label">Full Body + Long Bike · Compound · Core · Cardio</div>
+
+      <div class="section-divider">Compound Circuit</div>
+      <div class="exercise-card">
+        <div class="ex-card-header"><span class="ex-card-name">Leg Press</span><span class="ex-card-target">3 × 12</span></div>
+        <div class="ex-card-note">Lighter than Day 2</div>
+        <div class="sets-area" id="sets-d3-leg-press"></div>
+      </div>
+      <div class="exercise-card">
+        <div class="ex-card-header"><span class="ex-card-name">Chest Press Machine</span><span class="ex-card-target">3 × 12</span></div>
+        <div class="ex-card-note">Moderate weight</div>
+        <div class="sets-area" id="sets-d3-chest-press"></div>
+      </div>
+      <div class="exercise-card">
+        <div class="ex-card-header"><span class="ex-card-name">Lat Pulldown</span><span class="ex-card-target">3 × 12</span></div>
+        <div class="ex-card-note">Moderate weight</div>
+        <div class="sets-area" id="sets-d3-lat-pull"></div>
+      </div>
+      <div class="exercise-card">
+        <div class="ex-card-header"><span class="ex-card-name">Shoulder Press Machine</span><span class="ex-card-target">3 × 12</span></div>
+        <div class="ex-card-note">Moderate weight</div>
+        <div class="sets-area" id="sets-d3-shoulder-press"></div>
+      </div>
+
+      <div class="section-divider">Core</div>
+      <div class="exercise-card">
+        <div class="ex-card-header"><span class="ex-card-name">Seated Ab Crunch Machine</span><span class="ex-card-target">3 × 15</span></div>
+        <div class="ex-card-note">Or cable crunch kneeling</div>
+        <div class="sets-area" id="sets-d3-ab-crunch"></div>
+      </div>
+      <div class="exercise-card">
+        <div class="ex-card-header"><span class="ex-card-name">Plank</span><span class="ex-card-target">3 × Max Hold</span></div>
+        <div class="ex-card-note">On elbows — build from 20 sec</div>
+        <div class="sets-area" id="sets-d3-plank"></div>
+      </div>
+
+      <div class="section-divider">Cardio — Main Event</div>
+      <div class="cardio-card">
+        <div class="cardio-title">Stationary Bike</div>
+        <div class="cardio-fields">
+          <div class="field"><label>Time (min)</label><input class="set-input" id="d3-bike-time" type="number" placeholder="28" inputmode="numeric"></div>
+          <div class="field"><label>Resistance</label><input class="set-input" id="d3-bike-res" type="number" placeholder="5" inputmode="numeric"></div>
+          <div class="field"><label>Calories</label><input class="set-input" id="d3-bike-cal" type="number" placeholder="—" inputmode="numeric"></div>
+        </div>
+      </div>
+
+      <div class="save-workout-bar">
+        <button class="btn" onclick="saveWorkout(3)">SAVE DAY 4 SESSION</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PHOTOS ── -->
+  <div class="page" id="page-photos">
+    <div class="page-header">
+      <div class="page-title">Progress Photos</div>
+      <div class="page-sub">Visual check-ins</div>
+    </div>
+    <input type="file" id="photoInput" accept="image/*" capture="user">
+    <div id="photo-grid-container"></div>
+    <button class="photo-add-btn" onclick="document.getElementById('photoInput').click()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+  </div>
+
+  <!-- ── HISTORY ── -->
+  <div class="page" id="page-history">
+    <div class="page-header">
+      <div class="page-title">History</div>
+      <div class="page-sub">All sessions</div>
+    </div>
+    <div id="history-list" style="padding-bottom:80px"></div>
+  </div>
+
+</div>
+
+<!-- ── BOTTOM NAV ── -->
+<div id="nav">
+  <button class="nav-btn active" id="nav-dash" onclick="showPage('dash')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    Dash
+  </button>
+  <button class="nav-btn" id="nav-weight" onclick="showPage('weight')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+    Weight
+  </button>
+  <button class="nav-btn" id="nav-workout" onclick="showPage('workout')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 4v16M18 4v16M3 8h4M17 8h4M3 16h4M17 16h4"/></svg>
+    Workout
+  </button>
+  <button class="nav-btn" id="nav-photos" onclick="showPage('photos')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+    Photos
+  </button>
+  <button class="nav-btn" id="nav-history" onclick="showPage('history')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    History
+  </button>
+</div>
+
+<div id="toast"></div>
+
+<!-- ── PHOTO VIEWER ── -->
+<div id="photo-viewer">
+  <div style="padding:16px;padding-top:calc(16px + var(--safe-top));display:flex;justify-content:space-between;align-items:center;background:var(--bg)">
+    <button onclick="closeViewer()" style="background:none;border:none;color:var(--muted);font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;">✕ CLOSE</button>
+    <button onclick="deletePhoto()" style="background:none;border:none;color:var(--red);font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;cursor:pointer;">DELETE</button>
+  </div>
+  <img id="viewer-img" src="">
+  <div class="viewer-bar">
+    <div class="viewer-info" id="viewer-date"></div>
+    <div class="viewer-weight" id="viewer-weight"></div>
+  </div>
+</div>
+
+<script>
+// ── DATA ──
+const DB = {
+  get: k => { try { return JSON.parse(localStorage.getItem(k)) || [] } catch { return [] } },
+  set: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
+};
+
+const DAYS_CONFIG = [
+  { label: 'Day 1', focus: 'Upper Push',
+    sets: ['d0-chest-press','d0-cable-fly','d0-incline-db','d0-shoulder-press','d0-lateral-raise','d0-tri-pushdown','d0-tri-ext'],
+    names: ['Chest Press Machine','Cable Fly','Incline DB Press','Shoulder Press','Lateral Raise','Tricep Pushdown','Overhead Tri Ext'],
+    counts: [3,3,3,3,3,3,2] },
+  { label: 'Day 2', focus: 'Lower Body',
+    sets: ['d1-leg-press','d1-leg-curl','d1-leg-ext','d1-hip-ab','d1-hip-ad','d1-calf'],
+    names: ['Leg Press','Leg Curl','Leg Extension','Hip Abductor','Hip Adductor','Seated Calf Raise'],
+    counts: [4,3,3,3,3,3] },
+  { label: 'Day 3', focus: 'Upper Pull',
+    sets: ['d2-cable-row','d2-lat-pull','d2-machine-row','d2-rev-fly','d2-face-pull','d2-db-curl','d2-hammer'],
+    names: ['Seated Cable Row','Lat Pulldown','Machine Row','Pec Deck Rev Fly','Face Pull','DB Curl','Hammer Curl'],
+    counts: [4,3,3,3,3,3,2] },
+  { label: 'Day 4', focus: 'Full Body + Bike',
+    sets: ['d3-leg-press','d3-chest-press','d3-lat-pull','d3-shoulder-press','d3-ab-crunch','d3-plank'],
+    names: ['Leg Press','Chest Press','Lat Pulldown','Shoulder Press','Ab Crunch','Plank'],
+    counts: [3,3,3,3,3,3] },
+];
+
+// ── PAGES ──
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+  document.getElementById('app').scrollTop = 0;
+  if (name === 'dash') renderDash();
+  if (name === 'weight') renderWeightLog();
+  if (name === 'photos') renderPhotos();
+  if (name === 'history') renderHistory();
+}
+
+// ── SET INPUTS ──
+function buildSets(containerId, count, dayIdx, exIdx) {
+  const el = document.getElementById('sets-' + containerId);
+  if (!el) return;
+  el.innerHTML = '';
+  for (let i = 0; i < count; i++) {
+    const row = document.createElement('div');
+    row.className = 'set-row';
+    row.innerHTML = `
+      <span class="set-num">${i+1}</span>
+      <input class="set-input" type="number" placeholder="lbs" inputmode="decimal" id="inp-${containerId}-${i}-w">
+      <input class="set-input" type="number" placeholder="reps" inputmode="numeric" id="inp-${containerId}-${i}-r">
+      <button class="set-done-btn" id="btn-${containerId}-${i}" onclick="toggleDone('${containerId}',${i})">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </button>`;
+    el.appendChild(row);
+  }
+}
+
+function toggleDone(id, i) {
+  const btn = document.getElementById('btn-' + id + '-' + i);
+  btn.classList.toggle('done');
+}
+
+function initSets() {
+  DAYS_CONFIG.forEach((day, di) => {
+    day.sets.forEach((sid, ei) => {
+      buildSets(sid, day.counts[ei], di, ei);
+    });
+  });
+}
+
+// ── DAY TABS ──
+function selectDay(idx, btn) {
+  document.querySelectorAll('.day-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.workout-day').forEach(d => d.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('day-' + idx).classList.add('active');
+}
+
+// ── SAVE WORKOUT ──
+function saveWorkout(dayIdx) {
+  const day = DAYS_CONFIG[dayIdx];
+  const exercises = [];
+
+  day.sets.forEach((sid, ei) => {
+    const sets = [];
+    for (let i = 0; i < day.counts[ei]; i++) {
+      const w = document.getElementById('inp-' + sid + '-' + i + '-w')?.value;
+      const r = document.getElementById('inp-' + sid + '-' + i + '-r')?.value;
+      const done = document.getElementById('btn-' + sid + '-' + i)?.classList.contains('done');
+      if (w || r) sets.push({ w: w || '—', r: r || '—', done });
+    }
+    if (sets.length) exercises.push({ name: day.names[ei], sets });
+  });
+
+  const di = dayIdx;
+  const bike = {
+    time: document.getElementById('d' + di + '-bike-time')?.value || '',
+    res: document.getElementById('d' + di + '-bike-res')?.value || '',
+    cal: document.getElementById('d' + di + '-bike-cal')?.value || '',
+  };
+
+  if (!exercises.length && !bike.time) { toast('Nothing to save'); return; }
+
+  const sessions = DB.get('workouts');
+  sessions.unshift({
+    id: Date.now(),
+    date: new Date().toISOString(),
+    day: dayIdx,
+    dayLabel: day.label,
+    focus: day.focus,
+    exercises,
+    bike,
+  });
+  DB.set('workouts', sessions);
+  toast('Day ' + (dayIdx+1) + ' saved');
+}
+
+// ── WEIGHT ──
+function logWeight() {
+  const w = parseFloat(document.getElementById('w-weight').value);
+  const d = document.getElementById('w-date').value;
+  const n = document.getElementById('w-note').value.trim();
+  if (!w || !d) { toast('Enter weight and date'); return; }
+  const log = DB.get('weights');
+  log.unshift({ id: Date.now(), weight: w, date: d, note: n });
+  log.sort((a,b) => b.date.localeCompare(a.date));
+  DB.set('weights', log);
+  document.getElementById('w-weight').value = '';
+  document.getElementById('w-note').value = '';
+  renderWeightLog();
+  toast('Weight logged');
+}
+
+function deleteWeight(id) {
+  const log = DB.get('weights').filter(e => e.id !== id);
+  DB.set('weights', log);
+  renderWeightLog();
+}
+
+function renderWeightLog() {
+  const log = DB.get('weights');
+  const el = document.getElementById('weight-log-list');
+  if (!log.length) { el.innerHTML = '<div class="empty-state"><p>No entries yet</p></div>'; return; }
+  el.innerHTML = log.map((e, i) => {
+    const prev = log[i+1];
+    let delta = '', tagClass = 'tag-same';
+    if (prev) {
+      const diff = e.weight - prev.weight;
+      if (diff < 0) { delta = diff.toFixed(1); tagClass = 'tag-down'; }
+      else if (diff > 0) { delta = '+' + diff.toFixed(1); tagClass = 'tag-up'; }
+      else delta = '±0';
+    }
+    return `<div class="log-entry">
+      <div class="entry-left">
+        <div class="entry-date">${fmtDate(e.date)}</div>
+        <div class="entry-main">${e.weight} <span style="font-size:14px;color:var(--muted)">lbs</span></div>
+        ${e.note ? '<div class="entry-note">' + e.note + '</div>' : ''}
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        ${delta ? '<span class="entry-delta-tag ' + tagClass + '">' + delta + '</span>' : ''}
+        <button class="btn-danger" onclick="deleteWeight(${e.id})">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── PHOTOS ──
+let currentPhotoIdx = null;
+
+document.getElementById('photoInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const photos = DB.get('photos');
+    const weights = DB.get('weights');
+    const latestWeight = weights.length ? weights[0].weight : null;
+    photos.unshift({
+      id: Date.now(),
+      date: new Date().toISOString().split('T')[0],
+      data: ev.target.result,
+      weight: latestWeight,
+    });
+    DB.set('photos', photos);
+    renderPhotos();
+    toast('Photo saved');
+  };
+  reader.readAsDataURL(file);
+  this.value = '';
+});
+
+function renderPhotos() {
+  const photos = DB.get('photos');
+  const el = document.getElementById('photo-grid-container');
+  if (!photos.length) {
+    el.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><p>Tap + to add your first photo</p></div>';
+    return;
+  }
+  el.innerHTML = '<div class="photo-grid">' + photos.map((p, i) => `
+    <div class="photo-thumb" onclick="openViewer(${i})">
+      <img src="${p.data}" loading="lazy">
+      <div class="photo-meta">
+        <div class="photo-date-tag">${fmtDate(p.date)}</div>
+        ${p.weight ? '<div class="photo-weight-tag">' + p.weight + ' lbs</div>' : ''}
+      </div>
+    </div>`).join('') + '</div>';
+}
+
+function openViewer(idx) {
+  currentPhotoIdx = idx;
+  const photos = DB.get('photos');
+  const p = photos[idx];
+  document.getElementById('viewer-img').src = p.data;
+  document.getElementById('viewer-date').textContent = fmtDate(p.date);
+  document.getElementById('viewer-weight').textContent = p.weight ? p.weight + ' lbs' : '';
+  document.getElementById('photo-viewer').classList.add('open');
+}
+
+function closeViewer() {
+  document.getElementById('photo-viewer').classList.remove('open');
+  currentPhotoIdx = null;
+}
+
+function deletePhoto() {
+  if (currentPhotoIdx === null) return;
+  const photos = DB.get('photos');
+  photos.splice(currentPhotoIdx, 1);
+  DB.set('photos', photos);
+  closeViewer();
+  renderPhotos();
+  toast('Photo deleted');
+}
+
+// ── HISTORY ──
+function renderHistory() {
+  const sessions = DB.get('workouts');
+  const el = document.getElementById('history-list');
+  if (!sessions.length) { el.innerHTML = '<div class="empty-state"><p>No workouts logged yet</p></div>'; return; }
+  el.innerHTML = sessions.map(s => {
+    const exRows = s.exercises.map(ex => {
+      const setStr = ex.sets.map(st => st.w + ' × ' + st.r).join(', ');
+      return `<div class="history-ex-row"><span class="history-ex-name">${ex.name}</span><span class="history-ex-val">${setStr}</span></div>`;
+    }).join('');
+    const bikeStr = s.bike && s.bike.time ? `🚴 ${s.bike.time} min · R${s.bike.res || '—'} · ${s.bike.cal || '—'} cal` : '';
+    return `<div class="history-session">
+      <div class="history-session-header">
+        <span class="history-day-label">${s.dayLabel} · ${s.focus}</span>
+        <span class="history-date">${fmtDate(s.date.split('T')[0])}</span>
+      </div>
+      ${exRows}
+      ${bikeStr ? '<div class="history-bike-row">' + bikeStr + '</div>' : ''}
+    </div>`;
+  }).join('');
+}
+
+// ── DASHBOARD ──
+function renderDash() {
+  const weights = DB.get('weights');
+  const workouts = DB.get('workouts');
+  const photos = DB.get('photos');
+
+  const START = 250;
+  const GOAL = 200;
+
+  if (weights.length) {
+    const cur = weights[0].weight;
+    document.getElementById('dash-weight').textContent = cur;
+    const lost = (START - cur).toFixed(1);
+    document.getElementById('dash-lost').textContent = Math.max(0, lost);
+    const toGoal = (cur - GOAL).toFixed(1);
+    document.getElementById('dash-to-goal').innerHTML = `<span class="${cur > GOAL ? 'delta-up' : 'delta-down'}">${toGoal > 0 ? toGoal + ' lbs to go' : 'Goal reached!'}</span>`;
+
+    if (weights.length > 1) {
+      const diff = (weights[0].weight - weights[1].weight).toFixed(1);
+      document.getElementById('dash-weight-delta').innerHTML = `<span class="${diff < 0 ? 'delta-down' : diff > 0 ? 'delta-up' : 'delta-none'}">${diff > 0 ? '+' : ''}${diff} from last</span>`;
+    }
+  } else {
+    document.getElementById('dash-weight').textContent = '—';
+    document.getElementById('dash-lost').textContent = '—';
+  }
+
+  document.getElementById('dash-workouts').textContent = workouts.length;
+  document.getElementById('dash-photos').textContent = photos.length;
+
+  // Recent weight
+  const rwEl = document.getElementById('dash-recent-weight');
+  if (weights.length) {
+    rwEl.innerHTML = weights.slice(0,3).map(e =>
+      `<div class="recent-log-item"><div><div class="log-date">${fmtDate(e.date)}</div><div class="log-desc">${e.note || 'Weigh-in'}</div></div><div class="log-val">${e.weight}</div></div>`
+    ).join('');
+  } else {
+    rwEl.innerHTML = '<div class="recent-log-item"><div class="log-desc" style="color:var(--muted)">No weight entries yet</div></div>';
+  }
+
+  // Recent workouts
+  const rwkEl = document.getElementById('dash-recent-workouts');
+  if (workouts.length) {
+    rwkEl.innerHTML = workouts.slice(0,3).map(s =>
+      `<div class="recent-log-item"><div><div class="log-date">${fmtDate(s.date.split('T')[0])}</div><div class="log-desc">${s.dayLabel} · ${s.focus}</div></div><div class="log-val" style="font-size:13px;color:var(--green)">${s.exercises.length} ex</div></div>`
+    ).join('');
+  } else {
+    rwkEl.innerHTML = '<div class="recent-log-item"><div class="log-desc" style="color:var(--muted)">No workouts logged yet</div></div>';
+  }
+}
+
+// ── TOAST ──
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+// ── UTILS ──
+function fmtDate(d) {
+  if (!d) return '';
+  const dt = new Date(d + (d.includes('T') ? '' : 'T00:00:00'));
+  return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// ── INIT ──
+document.getElementById('w-date').value = new Date().toISOString().split('T')[0];
+initSets();
+renderDash();
+</script>
+</body>
+</html>
