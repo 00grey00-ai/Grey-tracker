@@ -45,8 +45,7 @@ html, body {
 /* ── NAV ── */
 #nav {
   position: fixed;
-  bottom: 0;
-  left: 0; right: 0;
+  bottom: 0; left: 0; right: 0;
   height: calc(56px + var(--safe-bottom));
   padding-bottom: var(--safe-bottom);
   background: #0f0f0f;
@@ -98,7 +97,12 @@ html, body {
   background: var(--bg);
   z-index: 10;
   border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
 }
+
+.page-header-left { flex: 1; }
 
 .page-title {
   font-family: 'Bebas Neue', sans-serif;
@@ -116,6 +120,39 @@ html, body {
   text-transform: uppercase;
   margin-top: 3px;
 }
+
+/* ── SYNC STATUS ── */
+.sync-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.sync-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--muted2);
+  transition: background 0.3s;
+}
+.sync-dot.ok { background: var(--green); }
+.sync-dot.syncing { background: var(--accent); animation: pulse 1s infinite; }
+.sync-dot.error { background: var(--red); }
+
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+.settings-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+}
+.settings-btn:active { color: var(--accent); }
+.settings-btn svg { width: 18px; height: 18px; }
 
 /* ── DASHBOARD ── */
 .dash-stats {
@@ -155,11 +192,7 @@ html, body {
   color: var(--muted);
 }
 
-.stat-delta {
-  font-size: 11px;
-  margin-top: 2px;
-}
-
+.stat-delta { font-size: 11px; margin-top: 2px; }
 .delta-down { color: var(--green); }
 .delta-up { color: var(--red); }
 .delta-none { color: var(--muted); }
@@ -183,21 +216,30 @@ html, body {
   margin: 0 0 1px;
 }
 
-.log-date {
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  color: var(--muted);
-}
+.log-date { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+.log-desc { font-size: 13px; color: var(--text); }
+.log-val { font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: var(--accent); }
 
-.log-desc {
-  font-size: 13px;
-  color: var(--text);
+/* ── WEIGHT CHART ── */
+.chart-wrap {
+  margin: 0 16px 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 12px 8px 8px;
+  overflow: hidden;
 }
-
-.log-val {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 20px;
-  color: var(--accent);
+.chart-svg { width: 100%; display: block; }
+.chart-line { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart-area { fill: url(#chartGrad); opacity: 0.25; }
+.chart-dot { fill: var(--accent); }
+.chart-goal { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 4; }
+.chart-label { font-family: 'DM Mono', monospace; font-size: 9px; fill: var(--muted); }
+.chart-range {
+  display: flex; justify-content: space-between;
+  padding: 4px 4px 0;
+  font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 1px;
 }
 
 /* ── WEIGHT LOG ── */
@@ -308,9 +350,7 @@ html, body {
   border-radius: 2px;
 }
 
-.log-list {
-  margin: 0 0 80px;
-}
+.log-list { margin: 0 0 80px; }
 
 .log-entry {
   display: flex;
@@ -323,23 +363,9 @@ html, body {
 .log-entry:nth-child(odd) { background: var(--surface); }
 
 .entry-left { flex: 1; }
-.entry-date {
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  color: var(--muted);
-}
-.entry-main {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 24px;
-  color: var(--text);
-  letter-spacing: 1px;
-}
-.entry-note {
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: 1px;
-  font-style: italic;
-}
+.entry-date { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); }
+.entry-main { font-family: 'Bebas Neue', sans-serif; font-size: 24px; color: var(--text); letter-spacing: 1px; }
+.entry-note { font-size: 11px; color: var(--muted); margin-top: 1px; font-style: italic; }
 
 .entry-delta-tag {
   font-family: 'DM Mono', monospace;
@@ -412,17 +438,8 @@ html, body {
   background: var(--surface2);
 }
 
-.ex-card-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text);
-}
-
-.ex-card-target {
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  color: var(--accent);
-}
+.ex-card-name { font-size: 14px; font-weight: 500; color: var(--text); }
+.ex-card-target { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--accent); }
 
 .ex-card-note {
   padding: 6px 14px;
@@ -432,9 +449,7 @@ html, body {
   border-bottom: 1px solid var(--border);
 }
 
-.sets-area {
-  padding: 10px 14px;
-}
+.sets-area { padding: 10px 14px; }
 
 .set-row {
   display: grid;
@@ -466,7 +481,6 @@ html, body {
 }
 
 .set-input:focus { border-color: var(--accent-dim); }
-
 .set-input::placeholder { color: var(--muted2); font-size: 12px; }
 
 .set-done-btn {
@@ -483,12 +497,8 @@ html, body {
   flex-shrink: 0;
 }
 
-.set-done-btn.done {
-  background: var(--green);
-  border-color: var(--green);
-}
-
-.set-done-btn svg { width: 14px; height: 14px; }
+.set-done-btn.done { background: var(--green); border-color: var(--green); }
+.set-done-btn svg { width: 16px; height: 16px; }
 
 .cardio-card {
   margin: 0 16px 12px;
@@ -524,90 +534,9 @@ html, body {
   margin-top: 4px;
 }
 
-.save-workout-bar {
-  padding: 16px;
-  margin-bottom: 16px;
-}
-
-/* ── PHOTOS ── */
-.photo-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2px;
-  padding: 0 0 80px;
-}
-
-.photo-thumb {
-  aspect-ratio: 3/4;
-  background: var(--surface);
-  overflow: hidden;
-  position: relative;
-  cursor: pointer;
-}
-
-.photo-thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.photo-meta {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  background: linear-gradient(transparent, rgba(0,0,0,0.85));
-  padding: 20px 8px 8px;
-}
-
-.photo-date-tag {
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  color: rgba(255,255,255,0.7);
-}
-
-.photo-weight-tag {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 18px;
-  color: var(--accent);
-  letter-spacing: 1px;
-}
-
-.photo-add-btn {
-  position: fixed;
-  bottom: calc(72px + var(--safe-bottom));
-  right: 16px;
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: var(--accent);
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 20px rgba(232,197,71,0.3);
-  z-index: 50;
-}
-
-.photo-add-btn svg { width: 24px; height: 24px; }
-
-#photoInput { display: none; }
+.save-workout-bar { padding: 16px; margin-bottom: 16px; }
 
 /* ── HISTORY ── */
-.history-group {
-  margin-bottom: 2px;
-}
-
-.history-group-header {
-  padding: 10px 16px;
-  background: var(--surface2);
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  border-bottom: 1px solid var(--border);
-}
-
 .history-session {
   background: var(--surface);
   border-bottom: 1px solid var(--border);
@@ -621,18 +550,8 @@ html, body {
   margin-bottom: 8px;
 }
 
-.history-day-label {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 20px;
-  letter-spacing: 1px;
-  color: var(--accent);
-}
-
-.history-date {
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  color: var(--muted);
-}
+.history-day-label { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; color: var(--accent); }
+.history-date { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); }
 
 .history-ex-row {
   display: flex;
@@ -656,6 +575,70 @@ html, body {
   color: var(--green);
 }
 
+/* ── SETTINGS MODAL ── */
+#modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 150;
+  align-items: flex-end;
+}
+#modal-overlay.open { display: flex; }
+
+.modal {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 20px;
+  padding-bottom: calc(20px + var(--safe-bottom));
+  border-radius: 8px 8px 0 0;
+}
+
+.modal-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px;
+  letter-spacing: 2px;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.modal-close {
+  float: right;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 24px;
+  cursor: pointer;
+  line-height: 1;
+  margin-top: -4px;
+}
+
+.modal-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  margin-bottom: 20px;
+  line-height: 1.7;
+}
+
+.modal-sub a { color: var(--accent); }
+
+.sync-status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border-top: 1px solid var(--border);
+  margin-top: 16px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
+
 /* ── TOAST ── */
 #toast {
   position: fixed;
@@ -676,113 +659,7 @@ html, body {
   pointer-events: none;
 }
 
-#toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-/* ── MODAL ── */
-#modal-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.85);
-  z-index: 150;
-  align-items: flex-end;
-}
-
-#modal-overlay.open { display: flex; }
-
-.modal {
-  background: var(--surface);
-  border-top: 1px solid var(--border);
-  width: 100%;
-  max-height: 80vh;
-  overflow-y: auto;
-  padding: 20px;
-  padding-bottom: calc(20px + var(--safe-bottom));
-  border-radius: 8px 8px 0 0;
-}
-
-.modal-title {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 24px;
-  letter-spacing: 2px;
-  color: var(--accent);
-  margin-bottom: 16px;
-}
-
-.modal-close {
-  float: right;
-  background: none;
-  border: none;
-  color: var(--muted);
-  font-size: 24px;
-  cursor: pointer;
-  line-height: 1;
-  margin-top: -4px;
-}
-
-/* ── PHOTO VIEWER ── */
-#photo-viewer {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: #000;
-  z-index: 160;
-  flex-direction: column;
-}
-
-#photo-viewer.open { display: flex; }
-
-#photo-viewer img {
-  flex: 1;
-  object-fit: contain;
-  width: 100%;
-}
-
-.viewer-bar {
-  padding: 16px;
-  padding-bottom: calc(16px + var(--safe-bottom));
-  background: var(--bg);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.viewer-info {
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  color: var(--muted);
-}
-
-.viewer-weight {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 28px;
-  color: var(--accent);
-}
-
-/* ── WEIGHT CHART ── */
-.chart-wrap {
-  margin: 0 16px 4px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 2px;
-  padding: 12px 8px 8px;
-  overflow: hidden;
-}
-.chart-svg { width: 100%; display: block; }
-.chart-line { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
-.chart-area { fill: url(#chartGrad); opacity: 0.25; }
-.chart-dot { fill: var(--accent); }
-.chart-goal { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 4; }
-.chart-label { font-family: 'DM Mono', monospace; font-size: 9px; fill: var(--muted); }
-.chart-range {
-  display: flex; justify-content: space-between;
-  padding: 4px 4px 0;
-  font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted);
-  text-transform: uppercase; letter-spacing: 1px;
-}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 /* ── EMPTY STATE ── */
 .empty-state {
@@ -790,8 +667,6 @@ html, body {
   padding: 60px 32px;
   color: var(--muted);
 }
-
-.empty-state svg { margin-bottom: 16px; opacity: 0.3; }
 
 .empty-state p {
   font-family: 'DM Mono', monospace;
@@ -808,9 +683,20 @@ html, body {
   <!-- ── DASHBOARD ── -->
   <div class="page active" id="page-dash">
     <div class="page-header">
-      <div class="page-title">Dashboard</div>
-      <div class="page-sub">Grey · Target 200 lbs</div>
+      <div class="page-header-left">
+        <div class="page-title">Dashboard</div>
+        <div class="page-sub">Grey · Target 200 lbs</div>
+      </div>
+      <div class="sync-area">
+        <div class="sync-dot" id="sync-dot"></div>
+        <button class="settings-btn" onclick="openSettings()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+          </svg>
+        </button>
+      </div>
     </div>
+
     <div class="dash-stats">
       <div class="stat-card">
         <div class="stat-label">Current Weight</div>
@@ -830,9 +716,9 @@ html, body {
         <div class="stat-unit">sessions</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Photos Taken</div>
-        <div class="stat-value" id="dash-photos">0</div>
-        <div class="stat-unit">check-ins</div>
+        <div class="stat-label">Personal Records</div>
+        <div class="stat-value" id="dash-prs">0</div>
+        <div class="stat-unit">exercises</div>
       </div>
     </div>
 
@@ -856,8 +742,10 @@ html, body {
   <!-- ── WEIGHT ── -->
   <div class="page" id="page-weight">
     <div class="page-header">
-      <div class="page-title">Body Weight</div>
-      <div class="page-sub">Log your weight</div>
+      <div class="page-header-left">
+        <div class="page-title">Body Weight</div>
+        <div class="page-sub">Log your weight</div>
+      </div>
     </div>
 
     <div class="form-block">
@@ -886,8 +774,10 @@ html, body {
   <!-- ── WORKOUT ── -->
   <div class="page" id="page-workout">
     <div class="page-header">
-      <div class="page-title">Workout</div>
-      <div class="page-sub">Log your session</div>
+      <div class="page-header-left">
+        <div class="page-title">Workout</div>
+        <div class="page-sub">Log your session</div>
+      </div>
     </div>
 
     <div class="day-tabs">
@@ -951,10 +841,7 @@ html, body {
           <div class="field"><label>Calories</label><input class="set-input" id="d0-bike-cal" type="number" placeholder="—" inputmode="numeric"></div>
         </div>
       </div>
-
-      <div class="save-workout-bar">
-        <button class="btn" onclick="saveWorkout(0)">SAVE DAY 1 SESSION</button>
-      </div>
+      <div class="save-workout-bar"><button class="btn" onclick="saveWorkout(0)">SAVE DAY 1 SESSION</button></div>
     </div>
 
     <!-- DAY 2 -->
@@ -1002,10 +889,7 @@ html, body {
           <div class="field"><label>Calories</label><input class="set-input" id="d1-bike-cal" type="number" placeholder="—" inputmode="numeric"></div>
         </div>
       </div>
-
-      <div class="save-workout-bar">
-        <button class="btn" onclick="saveWorkout(1)">SAVE DAY 2 SESSION</button>
-      </div>
+      <div class="save-workout-bar"><button class="btn" onclick="saveWorkout(1)">SAVE DAY 2 SESSION</button></div>
     </div>
 
     <!-- DAY 3 -->
@@ -1062,10 +946,7 @@ html, body {
           <div class="field"><label>Calories</label><input class="set-input" id="d2-bike-cal" type="number" placeholder="—" inputmode="numeric"></div>
         </div>
       </div>
-
-      <div class="save-workout-bar">
-        <button class="btn" onclick="saveWorkout(2)">SAVE DAY 3 SESSION</button>
-      </div>
+      <div class="save-workout-bar"><button class="btn" onclick="saveWorkout(2)">SAVE DAY 3 SESSION</button></div>
     </div>
 
     <!-- DAY 4 -->
@@ -1115,31 +996,17 @@ html, body {
           <div class="field"><label>Calories</label><input class="set-input" id="d3-bike-cal" type="number" placeholder="—" inputmode="numeric"></div>
         </div>
       </div>
-
-      <div class="save-workout-bar">
-        <button class="btn" onclick="saveWorkout(3)">SAVE DAY 4 SESSION</button>
-      </div>
+      <div class="save-workout-bar"><button class="btn" onclick="saveWorkout(3)">SAVE DAY 4 SESSION</button></div>
     </div>
-  </div>
-
-  <!-- ── PHOTOS ── -->
-  <div class="page" id="page-photos">
-    <div class="page-header">
-      <div class="page-title">Progress Photos</div>
-      <div class="page-sub">Visual check-ins</div>
-    </div>
-    <input type="file" id="photoInput" accept="image/*" capture="environment">
-    <div id="photo-grid-container"></div>
-    <button class="photo-add-btn" onclick="document.getElementById('photoInput').click()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    </button>
   </div>
 
   <!-- ── HISTORY ── -->
   <div class="page" id="page-history">
     <div class="page-header">
-      <div class="page-title">History</div>
-      <div class="page-sub">All sessions</div>
+      <div class="page-header-left">
+        <div class="page-title">History</div>
+        <div class="page-sub">All sessions</div>
+      </div>
     </div>
     <div id="history-list" style="padding-bottom:80px"></div>
   </div>
@@ -1160,10 +1027,6 @@ html, body {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 4v16M18 4v16M3 8h4M17 8h4M3 16h4M17 16h4"/></svg>
     Workout
   </button>
-  <button class="nav-btn" id="nav-photos" onclick="showPage('photos')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-    Photos
-  </button>
   <button class="nav-btn" id="nav-history" onclick="showPage('history')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
     History
@@ -1172,16 +1035,27 @@ html, body {
 
 <div id="toast"></div>
 
-<!-- ── PHOTO VIEWER ── -->
-<div id="photo-viewer">
-  <div style="padding:16px;padding-top:calc(16px + var(--safe-top));display:flex;justify-content:space-between;align-items:center;background:var(--bg)">
-    <button onclick="closeViewer()" style="background:none;border:none;color:var(--muted);font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;">✕ CLOSE</button>
-    <button onclick="deletePhoto()" style="background:none;border:none;color:var(--red);font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;cursor:pointer;">DELETE</button>
-  </div>
-  <img id="viewer-img" src="">
-  <div class="viewer-bar">
-    <div class="viewer-info" id="viewer-date"></div>
-    <div class="viewer-weight" id="viewer-weight"></div>
+<!-- ── SETTINGS MODAL ── -->
+<div id="modal-overlay" onclick="closeSettings(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeSettings()">×</button>
+    <div class="modal-title">Sync Settings</div>
+    <div class="modal-sub" id="settings-instructions">
+      Data syncs to a private GitHub Gist tied to your account.<br><br>
+      1. Go to <strong>github.com → Settings → Developer settings → Personal access tokens → Tokens (classic)</strong><br>
+      2. Generate new token · check <strong>gist</strong> scope only · no expiry<br>
+      3. Paste token below
+    </div>
+    <div class="field" style="margin-bottom:10px">
+      <label>GitHub Personal Access Token</label>
+      <input type="password" id="pat-input" placeholder="ghp_..." autocomplete="off" spellcheck="false">
+    </div>
+    <button class="btn" onclick="saveToken()">CONNECT</button>
+    <div class="sync-status-row" id="sync-status-row" style="display:none">
+      <div class="sync-dot ok"></div>
+      <span id="sync-status-text"></span>
+      <button class="btn-danger" style="margin-left:auto" onclick="disconnectSync()">DISCONNECT</button>
+    </div>
   </div>
 </div>
 
@@ -1211,6 +1085,114 @@ const DAYS_CONFIG = [
     counts: [3,3,3,3,3,3] },
 ];
 
+// ── GIST SYNC ──
+const GIST_FILE = 'grey-tracker.json';
+
+function getCfg() { try { return JSON.parse(localStorage.getItem('gt-cfg') || '{}'); } catch { return {}; } }
+function setCfg(v) { localStorage.setItem('gt-cfg', JSON.stringify(v)); }
+
+function setSyncDot(state) {
+  const dot = document.getElementById('sync-dot');
+  if (dot) { dot.className = 'sync-dot ' + state; }
+}
+
+async function pushToGist() {
+  const cfg = getCfg();
+  if (!cfg.token) return;
+  setSyncDot('syncing');
+  const payload = { weights: DB.get('weights'), workouts: DB.get('workouts'), prs: DB.get('prs') };
+  const body = { description: 'Grey Tracker data', public: false, files: { [GIST_FILE]: { content: JSON.stringify(payload) } } };
+  try {
+    const url = cfg.gistId ? `https://api.github.com/gists/${cfg.gistId}` : 'https://api.github.com/gists';
+    const method = cfg.gistId ? 'PATCH' : 'POST';
+    const res = await fetch(url, {
+      method,
+      headers: { 'Authorization': `token ${cfg.token}`, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github+json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) { setSyncDot('error'); return; }
+    const gist = await res.json();
+    if (!cfg.gistId) cfg.gistId = gist.id;
+    cfg.lastSync = new Date().toISOString();
+    setCfg(cfg);
+    setSyncDot('ok');
+    updateSyncStatusRow();
+  } catch(e) { setSyncDot('error'); }
+}
+
+async function pullFromGist() {
+  const cfg = getCfg();
+  if (!cfg.token || !cfg.gistId) { setSyncDot(cfg.token ? 'syncing' : ''); return; }
+  setSyncDot('syncing');
+  try {
+    const res = await fetch(`https://api.github.com/gists/${cfg.gistId}`, {
+      headers: { 'Authorization': `token ${cfg.token}`, 'Accept': 'application/vnd.github+json' }
+    });
+    if (!res.ok) { setSyncDot('error'); return; }
+    const gist = await res.json();
+    const content = gist.files[GIST_FILE]?.content;
+    if (content) {
+      const data = JSON.parse(content);
+      if (data.weights) DB.set('weights', data.weights);
+      if (data.workouts) DB.set('workouts', data.workouts);
+      if (data.prs) DB.set('prs', data.prs);
+    }
+    cfg.lastSync = new Date().toISOString();
+    setCfg(cfg);
+    setSyncDot('ok');
+    renderDash();
+    updateSyncStatusRow();
+  } catch(e) { setSyncDot('error'); }
+}
+
+// ── SETTINGS MODAL ──
+function openSettings() {
+  const cfg = getCfg();
+  document.getElementById('pat-input').value = cfg.token ? '••••••••••••••••' : '';
+  updateSyncStatusRow();
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeSettings(e) {
+  if (e && e.target !== document.getElementById('modal-overlay')) return;
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+function updateSyncStatusRow() {
+  const cfg = getCfg();
+  const row = document.getElementById('sync-status-row');
+  const txt = document.getElementById('sync-status-text');
+  if (cfg.token && cfg.gistId) {
+    row.style.display = 'flex';
+    const last = cfg.lastSync ? 'Last sync ' + fmtDate(cfg.lastSync.split('T')[0]) : 'Not yet synced';
+    txt.textContent = 'Connected · ' + last;
+    document.getElementById('settings-instructions').style.display = 'none';
+  } else {
+    row.style.display = 'none';
+    document.getElementById('settings-instructions').style.display = '';
+  }
+}
+
+async function saveToken() {
+  const val = document.getElementById('pat-input').value.trim();
+  if (!val || val.startsWith('•')) { toast('Enter your token'); return; }
+  const cfg = getCfg();
+  cfg.token = val;
+  delete cfg.gistId;
+  setCfg(cfg);
+  document.getElementById('modal-overlay').classList.remove('open');
+  toast('Connecting...');
+  await pushToGist();
+  toast('Sync connected');
+}
+
+function disconnectSync() {
+  setCfg({});
+  setSyncDot('');
+  document.getElementById('modal-overlay').classList.remove('open');
+  toast('Sync disconnected');
+}
+
 // ── PAGES ──
 function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -1220,12 +1202,13 @@ function showPage(name) {
   document.getElementById('app').scrollTop = 0;
   if (name === 'dash') renderDash();
   if (name === 'weight') renderWeightLog();
-  if (name === 'photos') renderPhotos();
   if (name === 'history') renderHistory();
+  if (name === 'workout') requestWakeLock();
+  else releaseWakeLock();
 }
 
 // ── SET INPUTS ──
-function buildSets(containerId, count, dayIdx, exIdx) {
+function buildSets(containerId, count) {
   const el = document.getElementById('sets-' + containerId);
   if (!el) return;
   el.innerHTML = '';
@@ -1244,15 +1227,12 @@ function buildSets(containerId, count, dayIdx, exIdx) {
 }
 
 function toggleDone(id, i) {
-  const btn = document.getElementById('btn-' + id + '-' + i);
-  btn.classList.toggle('done');
+  document.getElementById('btn-' + id + '-' + i).classList.toggle('done');
 }
 
 function initSets() {
-  DAYS_CONFIG.forEach((day, di) => {
-    day.sets.forEach((sid, ei) => {
-      buildSets(sid, day.counts[ei], di, ei);
-    });
+  DAYS_CONFIG.forEach(day => {
+    day.sets.forEach((sid, ei) => buildSets(sid, day.counts[ei]));
   });
 }
 
@@ -1289,16 +1269,15 @@ function saveWorkout(dayIdx) {
 
   if (!exercises.length && !bike.time) { toast('Nothing to save'); return; }
 
-  // ── PR check ──
-  const prs = DB.get('prs'); // { [exName]: bestWeight }
+  // PR check
+  const prs = DB.get('prs');
   const newPRs = [];
   exercises.forEach(ex => {
     const best = Math.max(...ex.sets.map(s => parseFloat(s.w) || 0));
     if (best > 0) {
       const prev = prs.find(p => p.name === ex.name);
       if (!prev || best > prev.best) {
-        if (prev) prev.best = best;
-        else prs.push({ name: ex.name, best });
+        if (prev) prev.best = best; else prs.push({ name: ex.name, best });
         newPRs.push(ex.name);
       }
     }
@@ -1306,19 +1285,13 @@ function saveWorkout(dayIdx) {
   DB.set('prs', prs);
 
   const sessions = DB.get('workouts');
-  sessions.unshift({
-    id: Date.now(),
-    date: new Date().toISOString(),
-    day: dayIdx,
-    dayLabel: day.label,
-    focus: day.focus,
-    exercises,
-    bike,
-    prs: newPRs,
-  });
+  sessions.unshift({ id: Date.now(), date: new Date().toISOString(), day: dayIdx, dayLabel: day.label, focus: day.focus, exercises, bike, prs: newPRs });
   DB.set('workouts', sessions);
-  if (newPRs.length) toast('PR! ' + newPRs[0] + (newPRs.length > 1 ? ' +' + (newPRs.length-1) + ' more' : ''));
-  else toast('Day ' + (dayIdx+1) + ' saved');
+
+  if (newPRs.length) toast('PR! ' + newPRs[0] + (newPRs.length > 1 ? ' +' + (newPRs.length - 1) + ' more' : ''));
+  else toast('Day ' + (dayIdx + 1) + ' saved');
+
+  pushToGist();
 }
 
 // ── WEIGHT ──
@@ -1329,18 +1302,19 @@ function logWeight() {
   if (!w || !d) { toast('Enter weight and date'); return; }
   const log = DB.get('weights');
   log.unshift({ id: Date.now(), weight: w, date: d, note: n });
-  log.sort((a,b) => b.date.localeCompare(a.date));
+  log.sort((a, b) => b.date.localeCompare(a.date));
   DB.set('weights', log);
   document.getElementById('w-weight').value = '';
   document.getElementById('w-note').value = '';
   renderWeightLog();
   toast('Weight logged');
+  pushToGist();
 }
 
 function deleteWeight(id) {
-  const log = DB.get('weights').filter(e => e.id !== id);
-  DB.set('weights', log);
+  DB.set('weights', DB.get('weights').filter(e => e.id !== id));
   renderWeightLog();
+  pushToGist();
 }
 
 function renderWeightLog() {
@@ -1348,7 +1322,7 @@ function renderWeightLog() {
   const el = document.getElementById('weight-log-list');
   if (!log.length) { el.innerHTML = '<div class="empty-state"><p>No entries yet</p></div>'; return; }
   el.innerHTML = log.map((e, i) => {
-    const prev = log[i+1];
+    const prev = log[i + 1];
     let delta = '', tagClass = 'tag-same';
     if (prev) {
       const diff = e.weight - prev.weight;
@@ -1370,73 +1344,6 @@ function renderWeightLog() {
   }).join('');
 }
 
-// ── PHOTOS ──
-let currentPhotoIdx = null;
-
-document.getElementById('photoInput').addEventListener('change', function(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(ev) {
-    const photos = DB.get('photos');
-    const weights = DB.get('weights');
-    const latestWeight = weights.length ? weights[0].weight : null;
-    photos.unshift({
-      id: Date.now(),
-      date: new Date().toISOString().split('T')[0],
-      data: ev.target.result,
-      weight: latestWeight,
-    });
-    DB.set('photos', photos);
-    renderPhotos();
-    toast('Photo saved');
-  };
-  reader.readAsDataURL(file);
-  this.value = '';
-});
-
-function renderPhotos() {
-  const photos = DB.get('photos');
-  const el = document.getElementById('photo-grid-container');
-  if (!photos.length) {
-    el.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><p>Tap + to add your first photo</p></div>';
-    return;
-  }
-  el.innerHTML = '<div class="photo-grid">' + photos.map((p, i) => `
-    <div class="photo-thumb" onclick="openViewer(${i})">
-      <img src="${p.data}" loading="lazy">
-      <div class="photo-meta">
-        <div class="photo-date-tag">${fmtDate(p.date)}</div>
-        ${p.weight ? '<div class="photo-weight-tag">' + p.weight + ' lbs</div>' : ''}
-      </div>
-    </div>`).join('') + '</div>';
-}
-
-function openViewer(idx) {
-  currentPhotoIdx = idx;
-  const photos = DB.get('photos');
-  const p = photos[idx];
-  document.getElementById('viewer-img').src = p.data;
-  document.getElementById('viewer-date').textContent = fmtDate(p.date);
-  document.getElementById('viewer-weight').textContent = p.weight ? p.weight + ' lbs' : '';
-  document.getElementById('photo-viewer').classList.add('open');
-}
-
-function closeViewer() {
-  document.getElementById('photo-viewer').classList.remove('open');
-  currentPhotoIdx = null;
-}
-
-function deletePhoto() {
-  if (currentPhotoIdx === null) return;
-  const photos = DB.get('photos');
-  photos.splice(currentPhotoIdx, 1);
-  DB.set('photos', photos);
-  closeViewer();
-  renderPhotos();
-  toast('Photo deleted');
-}
-
 // ── HISTORY ──
 function renderHistory() {
   const sessions = DB.get('workouts');
@@ -1446,7 +1353,10 @@ function renderHistory() {
     const exRows = s.exercises.map(ex => {
       const setStr = ex.sets.map(st => st.w + ' × ' + st.r).join(', ');
       const isPR = s.prs && s.prs.includes(ex.name);
-      return `<div class="history-ex-row"><span class="history-ex-name">${ex.name}${isPR ? ' <span style="color:var(--accent);font-size:9px;letter-spacing:1px">PR</span>' : ''}</span><span class="history-ex-val">${setStr}</span></div>`;
+      return `<div class="history-ex-row">
+        <span class="history-ex-name">${ex.name}${isPR ? ' <span style="color:var(--accent);font-size:9px;letter-spacing:1px">PR</span>' : ''}</span>
+        <span class="history-ex-val">${setStr}</span>
+      </div>`;
     }).join('');
     const bikeStr = s.bike && s.bike.time ? `🚴 ${s.bike.time} min · R${s.bike.res || '—'} · ${s.bike.cal || '—'} cal` : '';
     return `<div class="history-session">
@@ -1460,23 +1370,51 @@ function renderHistory() {
   }).join('');
 }
 
+// ── WEIGHT CHART ──
+function renderChart(weights) {
+  const el = document.getElementById('dash-chart');
+  if (!weights.length) { el.innerHTML = ''; return; }
+  const pts = weights.slice().reverse().slice(-30);
+  if (pts.length < 2) { el.innerHTML = ''; return; }
+  const W = 320, H = 90, PAD = { t: 10, r: 10, b: 18, l: 32 };
+  const vals = pts.map(p => p.weight);
+  const minV = Math.min(...vals, 200) - 2;
+  const maxV = Math.max(...vals, 200) + 2;
+  const sx = i => PAD.l + (i / (pts.length - 1)) * (W - PAD.l - PAD.r);
+  const sy = v => PAD.t + (1 - (v - minV) / (maxV - minV)) * (H - PAD.t - PAD.b);
+  const linePts = pts.map((p, i) => `${sx(i)},${sy(p.weight)}`).join(' ');
+  const areaPath = `M${sx(0)},${sy(pts[0].weight)} ` + pts.map((p, i) => `L${sx(i)},${sy(p.weight)}`).join(' ') + ` L${sx(pts.length - 1)},${H - PAD.b} L${sx(0)},${H - PAD.b} Z`;
+  const goalY = sy(200);
+  el.innerHTML = `<div class="chart-wrap">
+    <svg class="chart-svg" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#e8c547"/><stop offset="100%" stop-color="#e8c547" stop-opacity="0"/>
+      </linearGradient></defs>
+      ${goalY > PAD.t && goalY < H - PAD.b ? `<line class="chart-goal" x1="${PAD.l}" y1="${goalY}" x2="${W - PAD.r}" y2="${goalY}"/>
+      <text class="chart-label" x="${PAD.l - 2}" y="${goalY + 3}" text-anchor="end">200</text>` : ''}
+      <text class="chart-label" x="${PAD.l - 2}" y="${PAD.t + 6}" text-anchor="end">${Math.round(maxV)}</text>
+      <text class="chart-label" x="${PAD.l - 2}" y="${H - PAD.b}" text-anchor="end">${Math.round(minV)}</text>
+      <path class="chart-area" d="${areaPath}"/>
+      <polyline class="chart-line" points="${linePts}"/>
+      <circle class="chart-dot" cx="${sx(pts.length - 1)}" cy="${sy(pts[pts.length - 1].weight)}" r="3"/>
+    </svg>
+    <div class="chart-range"><span>${fmtDate(pts[0].date).replace(/,.*/, '')}</span><span>${fmtDate(pts[pts.length - 1].date).replace(/,.*/, '')}</span></div>
+  </div>`;
+}
+
 // ── DASHBOARD ──
 function renderDash() {
   const weights = DB.get('weights');
   const workouts = DB.get('workouts');
-  const photos = DB.get('photos');
-
-  const START = 250;
-  const GOAL = 200;
+  const prs = DB.get('prs');
+  const START = 250, GOAL = 200;
 
   if (weights.length) {
     const cur = weights[0].weight;
     document.getElementById('dash-weight').textContent = cur;
-    const lost = (START - cur).toFixed(1);
-    document.getElementById('dash-lost').textContent = Math.max(0, lost);
+    document.getElementById('dash-lost').textContent = Math.max(0, (START - cur).toFixed(1));
     const toGoal = (cur - GOAL).toFixed(1);
     document.getElementById('dash-to-goal').innerHTML = `<span class="${cur > GOAL ? 'delta-up' : 'delta-down'}">${toGoal > 0 ? toGoal + ' lbs to go' : 'Goal reached!'}</span>`;
-
     if (weights.length > 1) {
       const diff = (weights[0].weight - weights[1].weight).toFixed(1);
       document.getElementById('dash-weight-delta').innerHTML = `<span class="${diff < 0 ? 'delta-down' : diff > 0 ? 'delta-up' : 'delta-none'}">${diff > 0 ? '+' : ''}${diff} from last</span>`;
@@ -1487,103 +1425,24 @@ function renderDash() {
   }
 
   document.getElementById('dash-workouts').textContent = workouts.length;
-  document.getElementById('dash-photos').textContent = photos.length;
+  document.getElementById('dash-prs').textContent = prs.length;
 
-  // Chart
   renderChart(weights);
 
-  // Recent weight
   const rwEl = document.getElementById('dash-recent-weight');
-  if (weights.length) {
-    rwEl.innerHTML = weights.slice(0,3).map(e =>
-      `<div class="recent-log-item"><div><div class="log-date">${fmtDate(e.date)}</div><div class="log-desc">${e.note || 'Weigh-in'}</div></div><div class="log-val">${e.weight}</div></div>`
-    ).join('');
-  } else {
-    rwEl.innerHTML = '<div class="recent-log-item"><div class="log-desc" style="color:var(--muted)">No weight entries yet</div></div>';
-  }
+  rwEl.innerHTML = weights.length
+    ? weights.slice(0, 3).map(e => `<div class="recent-log-item"><div><div class="log-date">${fmtDate(e.date)}</div><div class="log-desc">${e.note || 'Weigh-in'}</div></div><div class="log-val">${e.weight}</div></div>`).join('')
+    : '<div class="recent-log-item"><div class="log-desc" style="color:var(--muted)">No weight entries yet</div></div>';
 
-  // Recent workouts
   const rwkEl = document.getElementById('dash-recent-workouts');
-  if (workouts.length) {
-    rwkEl.innerHTML = workouts.slice(0,3).map(s =>
-      `<div class="recent-log-item"><div><div class="log-date">${fmtDate(s.date.split('T')[0])}</div><div class="log-desc">${s.dayLabel} · ${s.focus}</div></div><div class="log-val" style="font-size:13px;color:var(--green)">${s.exercises.length} ex</div></div>`
-    ).join('');
-  } else {
-    rwkEl.innerHTML = '<div class="recent-log-item"><div class="log-desc" style="color:var(--muted)">No workouts logged yet</div></div>';
-  }
-}
-
-// ── WEIGHT CHART ──
-function renderChart(weights) {
-  const el = document.getElementById('dash-chart');
-  if (!weights.length) { el.innerHTML = ''; return; }
-  const pts = weights.slice().reverse().slice(-30); // oldest→newest, max 30
-  if (pts.length < 2) { el.innerHTML = ''; return; }
-
-  const W = 320, H = 90, PAD = { t: 10, r: 10, b: 18, l: 32 };
-  const vals = pts.map(p => p.weight);
-  const minV = Math.min(...vals, 200) - 2;
-  const maxV = Math.max(...vals, 200) + 2;
-  const GOAL = 200;
-
-  const sx = i => PAD.l + (i / (pts.length - 1)) * (W - PAD.l - PAD.r);
-  const sy = v => PAD.t + (1 - (v - minV) / (maxV - minV)) * (H - PAD.t - PAD.b);
-
-  const linePts = pts.map((p, i) => `${sx(i)},${sy(p.weight)}`).join(' ');
-  const areaPath = `M${sx(0)},${sy(pts[0].weight)} ` +
-    pts.map((p, i) => `L${sx(i)},${sy(p.weight)}`).join(' ') +
-    ` L${sx(pts.length-1)},${H - PAD.b} L${sx(0)},${H - PAD.b} Z`;
-
-  const goalY = sy(GOAL);
-  const firstDate = fmtDate(pts[0].date).replace(/,.*/, '');
-  const lastDate  = fmtDate(pts[pts.length-1].date).replace(/,.*/, '');
-
-  el.innerHTML = `<div class="chart-wrap">
-    <svg class="chart-svg" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#e8c547"/>
-          <stop offset="100%" stop-color="#e8c547" stop-opacity="0"/>
-        </linearGradient>
-      </defs>
-      ${goalY > PAD.t && goalY < H - PAD.b ? `<line class="chart-goal" x1="${PAD.l}" y1="${goalY}" x2="${W - PAD.r}" y2="${goalY}"/>
-      <text class="chart-label" x="${PAD.l - 2}" y="${goalY + 3}" text-anchor="end">200</text>` : ''}
-      <text class="chart-label" x="${PAD.l - 2}" y="${sy(maxV) + 3}" text-anchor="end">${Math.round(maxV)}</text>
-      <text class="chart-label" x="${PAD.l - 2}" y="${H - PAD.b}" text-anchor="end">${Math.round(minV)}</text>
-      <path class="chart-area" d="${areaPath}"/>
-      <polyline class="chart-line" points="${linePts}"/>
-      <circle class="chart-dot" cx="${sx(pts.length-1)}" cy="${sy(pts[pts.length-1].weight)}" r="3"/>
-    </svg>
-    <div class="chart-range"><span>${firstDate}</span><span>${lastDate}</span></div>
-  </div>`;
-}
-
-// ── TOAST ──
-let toastTimer;
-function toast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2000);
-}
-
-// ── UTILS ──
-function fmtDate(d) {
-  if (!d) return '';
-  const dt = new Date(d + (d.includes('T') ? '' : 'T00:00:00'));
-  return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  rwkEl.innerHTML = workouts.length
+    ? workouts.slice(0, 3).map(s => `<div class="recent-log-item"><div><div class="log-date">${fmtDate(s.date.split('T')[0])}</div><div class="log-desc">${s.dayLabel} · ${s.focus}</div></div><div class="log-val" style="font-size:13px;color:var(--green)">${s.exercises.length} ex</div></div>`).join('')
+    : '<div class="recent-log-item"><div class="log-desc" style="color:var(--muted)">No workouts logged yet</div></div>';
 }
 
 // ── BACKUP / RESTORE ──
 function exportData() {
-  const data = {
-    exported: new Date().toISOString(),
-    weights: DB.get('weights'),
-    workouts: DB.get('workouts'),
-    photos: DB.get('photos'),
-    prs: DB.get('prs'),
-  };
+  const data = { exported: new Date().toISOString(), weights: DB.get('weights'), workouts: DB.get('workouts'), prs: DB.get('prs') };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -1603,10 +1462,10 @@ document.getElementById('importInput').addEventListener('change', function(e) {
       const data = JSON.parse(ev.target.result);
       if (data.weights) DB.set('weights', data.weights);
       if (data.workouts) DB.set('workouts', data.workouts);
-      if (data.photos) DB.set('photos', data.photos);
       if (data.prs) DB.set('prs', data.prs);
       renderDash();
       toast('Data restored');
+      pushToGist();
     } catch(e) { toast('Invalid file'); }
   };
   reader.readAsText(file);
@@ -1616,33 +1475,37 @@ document.getElementById('importInput').addEventListener('change', function(e) {
 // ── WAKE LOCK ──
 let wakeLock = null;
 async function requestWakeLock() {
-  if ('wakeLock' in navigator) {
-    try {
-      wakeLock = await navigator.wakeLock.request('screen');
-    } catch(e) {}
-  }
+  if ('wakeLock' in navigator) { try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e) {} }
 }
 async function releaseWakeLock() {
   if (wakeLock) { try { await wakeLock.release(); } catch(e) {} wakeLock = null; }
 }
-// Acquire wake lock when on workout page, release otherwise
-const _origShowPage = showPage;
-function showPage(name) {
-  _origShowPage(name);
-  if (name === 'workout') requestWakeLock();
-  else releaseWakeLock();
-}
-// Re-acquire if tab becomes visible again (iOS suspends it)
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && document.getElementById('page-workout').classList.contains('active')) {
-    requestWakeLock();
-  }
+  if (document.visibilityState === 'visible' && document.getElementById('page-workout').classList.contains('active')) requestWakeLock();
 });
+
+// ── TOAST ──
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ── UTILS ──
+function fmtDate(d) {
+  if (!d) return '';
+  const dt = new Date(d + (d.includes('T') ? '' : 'T00:00:00'));
+  return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
 
 // ── INIT ──
 document.getElementById('w-date').value = new Date().toISOString().split('T')[0];
 initSets();
 renderDash();
+pullFromGist(); // load remote data on startup
 </script>
 </body>
 </html>
