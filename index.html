@@ -1130,7 +1130,7 @@ function computePRs(workouts) {
       const cur = map.get(ex.name);
       if (!cur || best > cur.best) map.set(ex.name, { name: ex.name, best });
     }
-  });
+  }));
   return [...map.values()];
 }
 
