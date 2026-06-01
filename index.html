@@ -246,7 +246,7 @@ html, body {
   border: 1px solid var(--border);
   color: var(--text);
   font-family: 'DM Sans', sans-serif;
-  font-size: 15px;
+  font-size: 16px;
   padding: 10px 12px;
   border-radius: 2px;
   width: 100%;
@@ -456,7 +456,7 @@ html, body {
   border: 1px solid var(--border);
   color: var(--text);
   font-family: 'DM Mono', monospace;
-  font-size: 14px;
+  font-size: 16px;
   padding: 7px 10px;
   border-radius: 2px;
   width: 100%;
@@ -470,8 +470,8 @@ html, body {
 .set-input::placeholder { color: var(--muted2); font-size: 12px; }
 
 .set-done-btn {
-  width: 28px;
-  height: 28px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: 2px solid var(--border);
   background: transparent;
@@ -762,6 +762,28 @@ html, body {
   color: var(--accent);
 }
 
+/* ── WEIGHT CHART ── */
+.chart-wrap {
+  margin: 0 16px 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 12px 8px 8px;
+  overflow: hidden;
+}
+.chart-svg { width: 100%; display: block; }
+.chart-line { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart-area { fill: url(#chartGrad); opacity: 0.25; }
+.chart-dot { fill: var(--accent); }
+.chart-goal { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 4; }
+.chart-label { font-family: 'DM Mono', monospace; font-size: 9px; fill: var(--muted); }
+.chart-range {
+  display: flex; justify-content: space-between;
+  padding: 4px 4px 0;
+  font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 1px;
+}
+
 /* ── EMPTY STATE ── */
 .empty-state {
   text-align: center;
@@ -814,11 +836,21 @@ html, body {
       </div>
     </div>
 
+    <div class="section-head">Weight Trend</div>
+    <div id="dash-chart"></div>
+
     <div class="section-head">Recent Weight</div>
     <div id="dash-recent-weight"></div>
 
     <div class="section-head">Recent Workouts</div>
     <div id="dash-recent-workouts"></div>
+
+    <div class="section-head">Data</div>
+    <div style="padding:0 16px 32px;display:flex;gap:10px;">
+      <button class="btn-ghost" style="flex:1" onclick="exportData()">EXPORT BACKUP</button>
+      <button class="btn-ghost" style="flex:1" onclick="document.getElementById('importInput').click()">IMPORT BACKUP</button>
+      <input type="file" id="importInput" accept=".json" style="display:none">
+    </div>
   </div>
 
   <!-- ── WEIGHT ── -->
@@ -1096,7 +1128,7 @@ html, body {
       <div class="page-title">Progress Photos</div>
       <div class="page-sub">Visual check-ins</div>
     </div>
-    <input type="file" id="photoInput" accept="image/*" capture="user">
+    <input type="file" id="photoInput" accept="image/*" capture="environment">
     <div id="photo-grid-container"></div>
     <button class="photo-add-btn" onclick="document.getElementById('photoInput').click()">
       <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1257,6 +1289,22 @@ function saveWorkout(dayIdx) {
 
   if (!exercises.length && !bike.time) { toast('Nothing to save'); return; }
 
+  // ── PR check ──
+  const prs = DB.get('prs'); // { [exName]: bestWeight }
+  const newPRs = [];
+  exercises.forEach(ex => {
+    const best = Math.max(...ex.sets.map(s => parseFloat(s.w) || 0));
+    if (best > 0) {
+      const prev = prs.find(p => p.name === ex.name);
+      if (!prev || best > prev.best) {
+        if (prev) prev.best = best;
+        else prs.push({ name: ex.name, best });
+        newPRs.push(ex.name);
+      }
+    }
+  });
+  DB.set('prs', prs);
+
   const sessions = DB.get('workouts');
   sessions.unshift({
     id: Date.now(),
@@ -1266,9 +1314,11 @@ function saveWorkout(dayIdx) {
     focus: day.focus,
     exercises,
     bike,
+    prs: newPRs,
   });
   DB.set('workouts', sessions);
-  toast('Day ' + (dayIdx+1) + ' saved');
+  if (newPRs.length) toast('PR! ' + newPRs[0] + (newPRs.length > 1 ? ' +' + (newPRs.length-1) + ' more' : ''));
+  else toast('Day ' + (dayIdx+1) + ' saved');
 }
 
 // ── WEIGHT ──
@@ -1395,7 +1445,8 @@ function renderHistory() {
   el.innerHTML = sessions.map(s => {
     const exRows = s.exercises.map(ex => {
       const setStr = ex.sets.map(st => st.w + ' × ' + st.r).join(', ');
-      return `<div class="history-ex-row"><span class="history-ex-name">${ex.name}</span><span class="history-ex-val">${setStr}</span></div>`;
+      const isPR = s.prs && s.prs.includes(ex.name);
+      return `<div class="history-ex-row"><span class="history-ex-name">${ex.name}${isPR ? ' <span style="color:var(--accent);font-size:9px;letter-spacing:1px">PR</span>' : ''}</span><span class="history-ex-val">${setStr}</span></div>`;
     }).join('');
     const bikeStr = s.bike && s.bike.time ? `🚴 ${s.bike.time} min · R${s.bike.res || '—'} · ${s.bike.cal || '—'} cal` : '';
     return `<div class="history-session">
@@ -1438,6 +1489,9 @@ function renderDash() {
   document.getElementById('dash-workouts').textContent = workouts.length;
   document.getElementById('dash-photos').textContent = photos.length;
 
+  // Chart
+  renderChart(weights);
+
   // Recent weight
   const rwEl = document.getElementById('dash-recent-weight');
   if (weights.length) {
@@ -1459,6 +1513,51 @@ function renderDash() {
   }
 }
 
+// ── WEIGHT CHART ──
+function renderChart(weights) {
+  const el = document.getElementById('dash-chart');
+  if (!weights.length) { el.innerHTML = ''; return; }
+  const pts = weights.slice().reverse().slice(-30); // oldest→newest, max 30
+  if (pts.length < 2) { el.innerHTML = ''; return; }
+
+  const W = 320, H = 90, PAD = { t: 10, r: 10, b: 18, l: 32 };
+  const vals = pts.map(p => p.weight);
+  const minV = Math.min(...vals, 200) - 2;
+  const maxV = Math.max(...vals, 200) + 2;
+  const GOAL = 200;
+
+  const sx = i => PAD.l + (i / (pts.length - 1)) * (W - PAD.l - PAD.r);
+  const sy = v => PAD.t + (1 - (v - minV) / (maxV - minV)) * (H - PAD.t - PAD.b);
+
+  const linePts = pts.map((p, i) => `${sx(i)},${sy(p.weight)}`).join(' ');
+  const areaPath = `M${sx(0)},${sy(pts[0].weight)} ` +
+    pts.map((p, i) => `L${sx(i)},${sy(p.weight)}`).join(' ') +
+    ` L${sx(pts.length-1)},${H - PAD.b} L${sx(0)},${H - PAD.b} Z`;
+
+  const goalY = sy(GOAL);
+  const firstDate = fmtDate(pts[0].date).replace(/,.*/, '');
+  const lastDate  = fmtDate(pts[pts.length-1].date).replace(/,.*/, '');
+
+  el.innerHTML = `<div class="chart-wrap">
+    <svg class="chart-svg" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#e8c547"/>
+          <stop offset="100%" stop-color="#e8c547" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      ${goalY > PAD.t && goalY < H - PAD.b ? `<line class="chart-goal" x1="${PAD.l}" y1="${goalY}" x2="${W - PAD.r}" y2="${goalY}"/>
+      <text class="chart-label" x="${PAD.l - 2}" y="${goalY + 3}" text-anchor="end">200</text>` : ''}
+      <text class="chart-label" x="${PAD.l - 2}" y="${sy(maxV) + 3}" text-anchor="end">${Math.round(maxV)}</text>
+      <text class="chart-label" x="${PAD.l - 2}" y="${H - PAD.b}" text-anchor="end">${Math.round(minV)}</text>
+      <path class="chart-area" d="${areaPath}"/>
+      <polyline class="chart-line" points="${linePts}"/>
+      <circle class="chart-dot" cx="${sx(pts.length-1)}" cy="${sy(pts[pts.length-1].weight)}" r="3"/>
+    </svg>
+    <div class="chart-range"><span>${firstDate}</span><span>${lastDate}</span></div>
+  </div>`;
+}
+
 // ── TOAST ──
 let toastTimer;
 function toast(msg) {
@@ -1475,6 +1574,70 @@ function fmtDate(d) {
   const dt = new Date(d + (d.includes('T') ? '' : 'T00:00:00'));
   return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
+
+// ── BACKUP / RESTORE ──
+function exportData() {
+  const data = {
+    exported: new Date().toISOString(),
+    weights: DB.get('weights'),
+    workouts: DB.get('workouts'),
+    photos: DB.get('photos'),
+    prs: DB.get('prs'),
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'grey-tracker-backup-' + new Date().toISOString().split('T')[0] + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Backup downloaded');
+}
+
+document.getElementById('importInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (data.weights) DB.set('weights', data.weights);
+      if (data.workouts) DB.set('workouts', data.workouts);
+      if (data.photos) DB.set('photos', data.photos);
+      if (data.prs) DB.set('prs', data.prs);
+      renderDash();
+      toast('Data restored');
+    } catch(e) { toast('Invalid file'); }
+  };
+  reader.readAsText(file);
+  this.value = '';
+});
+
+// ── WAKE LOCK ──
+let wakeLock = null;
+async function requestWakeLock() {
+  if ('wakeLock' in navigator) {
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+    } catch(e) {}
+  }
+}
+async function releaseWakeLock() {
+  if (wakeLock) { try { await wakeLock.release(); } catch(e) {} wakeLock = null; }
+}
+// Acquire wake lock when on workout page, release otherwise
+const _origShowPage = showPage;
+function showPage(name) {
+  _origShowPage(name);
+  if (name === 'workout') requestWakeLock();
+  else releaseWakeLock();
+}
+// Re-acquire if tab becomes visible again (iOS suspends it)
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && document.getElementById('page-workout').classList.contains('active')) {
+    requestWakeLock();
+  }
+});
 
 // ── INIT ──
 document.getElementById('w-date').value = new Date().toISOString().split('T')[0];
