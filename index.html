@@ -451,6 +451,19 @@ html, body {
 
 .sets-area { padding: 10px 14px; }
 
+/* ── LAST-SESSION REFERENCE ── */
+.set-last {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+  margin-bottom: 9px;
+  padding-bottom: 7px;
+  border-bottom: 1px dashed var(--muted2);
+}
+.set-last b { color: var(--accent-dim); font-weight: 500; }
+.set-last.none { color: var(--muted2); font-style: italic; }
+
 .set-row {
   display: grid;
   grid-template-columns: 28px 1fr 1fr auto;
@@ -552,6 +565,7 @@ html, body {
 
 .history-day-label { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; color: var(--accent); }
 .history-date { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); }
+.history-head-right { display: flex; align-items: center; gap: 10px; }
 
 .history-ex-row {
   display: flex;
@@ -625,7 +639,7 @@ html, body {
   line-height: 1.7;
 }
 
-.modal-sub a { color: var(--accent); }
+.modal-sub strong { color: var(--text); }
 
 .sync-status-row {
   display: flex;
@@ -792,41 +806,41 @@ html, body {
       <div class="day-focus-label">Upper Push · Chest · Shoulders · Triceps</div>
 
       <div class="section-divider">Chest</div>
-      <div class="exercise-card" data-ex="Chest Press Machine">
+      <div class="exercise-card">
         <div class="ex-card-header"><span class="ex-card-name">Chest Press Machine</span><span class="ex-card-target">3 × 10–12</span></div>
         <div class="ex-card-note">Controlled, full range</div>
         <div class="sets-area" id="sets-d0-chest-press"></div>
       </div>
-      <div class="exercise-card" data-ex="Cable Fly Low to High">
+      <div class="exercise-card">
         <div class="ex-card-header"><span class="ex-card-name">Cable Fly (Low to High)</span><span class="ex-card-target">3 × 12</span></div>
         <div class="ex-card-note">Squeeze at top</div>
         <div class="sets-area" id="sets-d0-cable-fly"></div>
       </div>
-      <div class="exercise-card" data-ex="Incline Dumbbell Press">
+      <div class="exercise-card">
         <div class="ex-card-header"><span class="ex-card-name">Incline Dumbbell Press</span><span class="ex-card-target">3 × 10</span></div>
         <div class="ex-card-note">45° bench</div>
         <div class="sets-area" id="sets-d0-incline-db"></div>
       </div>
 
       <div class="section-divider">Shoulders</div>
-      <div class="exercise-card" data-ex="Shoulder Press Machine">
+      <div class="exercise-card">
         <div class="ex-card-header"><span class="ex-card-name">Shoulder Press Machine</span><span class="ex-card-target">3 × 10–12</span></div>
         <div class="ex-card-note">Seated, no lower back strain</div>
         <div class="sets-area" id="sets-d0-shoulder-press"></div>
       </div>
-      <div class="exercise-card" data-ex="Lateral Raise">
+      <div class="exercise-card">
         <div class="ex-card-header"><span class="ex-card-name">Lateral Raise (Dumbbell)</span><span class="ex-card-target">3 × 15</span></div>
         <div class="ex-card-note">Light, strict form</div>
         <div class="sets-area" id="sets-d0-lateral-raise"></div>
       </div>
 
       <div class="section-divider">Triceps</div>
-      <div class="exercise-card" data-ex="Tricep Pushdown">
+      <div class="exercise-card">
         <div class="ex-card-header"><span class="ex-card-name">Tricep Pushdown (Cable)</span><span class="ex-card-target">3 × 12</span></div>
         <div class="ex-card-note">Rope or bar</div>
         <div class="sets-area" id="sets-d0-tri-pushdown"></div>
       </div>
-      <div class="exercise-card" data-ex="Overhead Tricep Extension">
+      <div class="exercise-card">
         <div class="ex-card-header"><span class="ex-card-name">Overhead Tricep Extension</span><span class="ex-card-target">2 × 12</span></div>
         <div class="ex-card-note">Dumbbell or cable</div>
         <div class="sets-area" id="sets-d0-tri-ext"></div>
@@ -983,7 +997,7 @@ html, body {
       </div>
       <div class="exercise-card">
         <div class="ex-card-header"><span class="ex-card-name">Plank</span><span class="ex-card-target">3 × Max Hold</span></div>
-        <div class="ex-card-note">On elbows — build from 20 sec</div>
+        <div class="ex-card-note">On elbows — build from 20 sec · log seconds in the first box</div>
         <div class="sets-area" id="sets-d3-plank"></div>
       </div>
 
@@ -1060,11 +1074,14 @@ html, body {
 </div>
 
 <script>
-// ── DATA ──
+// ── DATA LAYER ──
 const DB = {
   get: k => { try { return JSON.parse(localStorage.getItem(k)) || [] } catch { return [] } },
   set: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
 };
+
+// Exercises measured by time/bodyweight, NOT weight — excluded from weight PRs
+const NON_WEIGHT = new Set(['Plank']);
 
 const DAYS_CONFIG = [
   { label: 'Day 1', focus: 'Upper Push',
@@ -1085,64 +1102,130 @@ const DAYS_CONFIG = [
     counts: [3,3,3,3,3,3] },
 ];
 
-// ── GIST SYNC ──
+let currentPage = 'dash';
+
+// ── DATE HELPERS (local timezone, not UTC) ──
+function todayLocal() {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().split('T')[0];
+}
+
+function fmtDate(d) {
+  if (!d) return '';
+  const dt = new Date(d + (d.includes('T') ? '' : 'T00:00:00'));
+  return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// Display date for a stored session (prefers local-captured date)
+function sessionDate(s) { return s.dateLocal || (s.date ? s.date.split('T')[0] : ''); }
+
+// ── PERSONAL RECORDS (derived from workout history) ──
+function computePRs(workouts) {
+  const map = new Map();
+  workouts.forEach(s => (s.exercises || []).forEach(ex => {
+    if (NON_WEIGHT.has(ex.name)) return;
+    const best = Math.max(...ex.sets.map(st => parseFloat(st.w) || 0));
+    if (best > 0) {
+      const cur = map.get(ex.name);
+      if (!cur || best > cur.best) map.set(ex.name, { name: ex.name, best });
+    }
+  });
+  return [...map.values()];
+}
+
+// ── SYNC ENGINE (GitHub Gist, merge-based) ──
 const GIST_FILE = 'grey-tracker.json';
 
 function getCfg() { try { return JSON.parse(localStorage.getItem('gt-cfg') || '{}'); } catch { return {}; } }
 function setCfg(v) { localStorage.setItem('gt-cfg', JSON.stringify(v)); }
 
+function getTombstones() { try { return JSON.parse(localStorage.getItem('gt-tomb') || '[]'); } catch { return []; } }
+function setTombstones(v) { localStorage.setItem('gt-tomb', JSON.stringify(v)); }
+function addTombstone(id) { const t = getTombstones(); if (!t.includes(id)) { t.push(id); setTombstones(t); } }
+
 function setSyncDot(state) {
   const dot = document.getElementById('sync-dot');
-  if (dot) { dot.className = 'sync-dot ' + state; }
+  if (dot) dot.className = 'sync-dot ' + state;
 }
 
-async function pushToGist() {
+// Union two record arrays by id; local copy wins on conflict
+function mergeById(local, remote) {
+  const m = new Map();
+  (remote || []).forEach(r => { if (r && r.id != null) m.set(r.id, r); });
+  (local || []).forEach(l => { if (l && l.id != null) m.set(l.id, l); });
+  return [...m.values()];
+}
+
+let syncTimer = null;
+function scheduleSync() {
+  if (!getCfg().token) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(syncNow, 800); // debounce rapid saves
+}
+
+// Pull remote, merge with local (keeping both sides), write back, push merged
+async function syncNow() {
   const cfg = getCfg();
-  if (!cfg.token) return;
+  if (!cfg.token) { setSyncDot(''); return; }
   setSyncDot('syncing');
-  const payload = { weights: DB.get('weights'), workouts: DB.get('workouts'), prs: DB.get('prs') };
-  const body = { description: 'Grey Tracker data', public: false, files: { [GIST_FILE]: { content: JSON.stringify(payload) } } };
   try {
+    let remote = { weights: [], workouts: [], tombstones: [] };
+
+    if (cfg.gistId) {
+      const res = await fetch(`https://api.github.com/gists/${cfg.gistId}`, {
+        headers: { 'Authorization': `token ${cfg.token}`, 'Accept': 'application/vnd.github+json' }
+      });
+      if (res.status === 404) {
+        delete cfg.gistId; setCfg(cfg); // gist gone — will recreate below
+      } else if (!res.ok) {
+        setSyncDot('error'); return;
+      } else {
+        const gist = await res.json();
+        const content = gist.files[GIST_FILE]?.content;
+        if (content) { try { remote = JSON.parse(content); } catch {} }
+      }
+    }
+
+    // Merge tombstones first, then records, then apply deletions
+    const tomb = [...new Set([...getTombstones(), ...(remote.tombstones || [])])];
+    const tombSet = new Set(tomb);
+
+    let weights = mergeById(DB.get('weights'), remote.weights).filter(w => !tombSet.has(w.id));
+    let workouts = mergeById(DB.get('workouts'), remote.workouts).filter(w => !tombSet.has(w.id));
+    weights.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    workouts.sort((a, b) => (b.id || 0) - (a.id || 0));
+
+    DB.set('weights', weights);
+    DB.set('workouts', workouts);
+    setTombstones(tomb);
+
+    // Push merged result back to remote
+    const payload = { weights, workouts, tombstones: tomb };
+    const body = { description: 'Grey Tracker data', public: false, files: { [GIST_FILE]: { content: JSON.stringify(payload) } } };
     const url = cfg.gistId ? `https://api.github.com/gists/${cfg.gistId}` : 'https://api.github.com/gists';
     const method = cfg.gistId ? 'PATCH' : 'POST';
-    const res = await fetch(url, {
+    const pres = await fetch(url, {
       method,
       headers: { 'Authorization': `token ${cfg.token}`, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github+json' },
       body: JSON.stringify(body)
     });
-    if (!res.ok) { setSyncDot('error'); return; }
-    const gist = await res.json();
+    if (!pres.ok) { setSyncDot('error'); return; }
+    const gist = await pres.json();
     if (!cfg.gistId) cfg.gistId = gist.id;
     cfg.lastSync = new Date().toISOString();
     setCfg(cfg);
-    setSyncDot('ok');
-    updateSyncStatusRow();
-  } catch(e) { setSyncDot('error'); }
-}
 
-async function pullFromGist() {
-  const cfg = getCfg();
-  if (!cfg.token || !cfg.gistId) { setSyncDot(cfg.token ? 'syncing' : ''); return; }
-  setSyncDot('syncing');
-  try {
-    const res = await fetch(`https://api.github.com/gists/${cfg.gistId}`, {
-      headers: { 'Authorization': `token ${cfg.token}`, 'Accept': 'application/vnd.github+json' }
-    });
-    if (!res.ok) { setSyncDot('error'); return; }
-    const gist = await res.json();
-    const content = gist.files[GIST_FILE]?.content;
-    if (content) {
-      const data = JSON.parse(content);
-      if (data.weights) DB.set('weights', data.weights);
-      if (data.workouts) DB.set('workouts', data.workouts);
-      if (data.prs) DB.set('prs', data.prs);
-    }
-    cfg.lastSync = new Date().toISOString();
-    setCfg(cfg);
     setSyncDot('ok');
+    // Refresh whatever's on screen
     renderDash();
+    if (currentPage === 'weight') renderWeightLog();
+    if (currentPage === 'history') renderHistory();
+    if (currentPage === 'workout') renderWorkoutRefs();
     updateSyncStatusRow();
-  } catch(e) { setSyncDot('error'); }
+  } catch (e) {
+    setSyncDot('error');
+  }
 }
 
 // ── SETTINGS MODAL ──
@@ -1164,8 +1247,7 @@ function updateSyncStatusRow() {
   const txt = document.getElementById('sync-status-text');
   if (cfg.token && cfg.gistId) {
     row.style.display = 'flex';
-    const last = cfg.lastSync ? 'Last sync ' + fmtDate(cfg.lastSync.split('T')[0]) : 'Not yet synced';
-    txt.textContent = 'Connected · ' + last;
+    txt.textContent = 'Connected · ' + (cfg.lastSync ? 'last sync ' + fmtDate(cfg.lastSync.split('T')[0]) : 'not yet synced');
     document.getElementById('settings-instructions').style.display = 'none';
   } else {
     row.style.display = 'none';
@@ -1182,12 +1264,14 @@ async function saveToken() {
   setCfg(cfg);
   document.getElementById('modal-overlay').classList.remove('open');
   toast('Connecting...');
-  await pushToGist();
-  toast('Sync connected');
+  await syncNow();
+  toast(getCfg().gistId ? 'Sync connected' : 'Connection failed — check token');
 }
 
 function disconnectSync() {
-  setCfg({});
+  const cfg = getCfg();
+  delete cfg.token; delete cfg.gistId; delete cfg.lastSync;
+  setCfg(cfg);
   setSyncDot('');
   document.getElementById('modal-overlay').classList.remove('open');
   toast('Sync disconnected');
@@ -1195,6 +1279,7 @@ function disconnectSync() {
 
 // ── PAGES ──
 function showPage(name) {
+  currentPage = name;
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
@@ -1203,7 +1288,7 @@ function showPage(name) {
   if (name === 'dash') renderDash();
   if (name === 'weight') renderWeightLog();
   if (name === 'history') renderHistory();
-  if (name === 'workout') requestWakeLock();
+  if (name === 'workout') { renderWorkoutRefs(); requestWakeLock(); }
   else releaseWakeLock();
 }
 
@@ -1211,7 +1296,7 @@ function showPage(name) {
 function buildSets(containerId, count) {
   const el = document.getElementById('sets-' + containerId);
   if (!el) return;
-  el.innerHTML = '';
+  el.innerHTML = '<div class="set-last" id="last-' + containerId + '"></div>';
   for (let i = 0; i < count; i++) {
     const row = document.createElement('div');
     row.className = 'set-row';
@@ -1231,8 +1316,31 @@ function toggleDone(id, i) {
 }
 
 function initSets() {
+  DAYS_CONFIG.forEach(day => day.sets.forEach((sid, ei) => buildSets(sid, day.counts[ei])));
+}
+
+// Fill each exercise card with last logged session for that movement
+function renderWorkoutRefs() {
+  const workouts = DB.get('workouts');
   DAYS_CONFIG.forEach(day => {
-    day.sets.forEach((sid, ei) => buildSets(sid, day.counts[ei]));
+    day.sets.forEach((sid, ei) => {
+      const el = document.getElementById('last-' + sid);
+      if (!el) return;
+      const name = day.names[ei];
+      let found = null;
+      for (const s of workouts) {
+        const ex = (s.exercises || []).find(e => e.name === name);
+        if (ex) { found = { s, ex }; break; }
+      }
+      if (found) {
+        const str = found.ex.sets.map(st => st.w + '×' + st.r).join(' · ');
+        el.className = 'set-last';
+        el.innerHTML = 'Last (' + fmtDate(sessionDate(found.s)).replace(/,.*/, '') + '): <b>' + str + '</b>';
+      } else {
+        el.className = 'set-last none';
+        el.textContent = 'No previous data';
+      }
+    });
   });
 }
 
@@ -1242,6 +1350,19 @@ function selectDay(idx, btn) {
   document.querySelectorAll('.workout-day').forEach(d => d.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('day-' + idx).classList.add('active');
+}
+
+// Clear a day's inputs after saving
+function clearDay(dayIdx) {
+  const day = DAYS_CONFIG[dayIdx];
+  day.sets.forEach((sid, ei) => {
+    for (let i = 0; i < day.counts[ei]; i++) {
+      const w = document.getElementById('inp-' + sid + '-' + i + '-w'); if (w) w.value = '';
+      const r = document.getElementById('inp-' + sid + '-' + i + '-r'); if (r) r.value = '';
+      const b = document.getElementById('btn-' + sid + '-' + i); if (b) b.classList.remove('done');
+    }
+  });
+  ['time', 'res', 'cal'].forEach(k => { const el = document.getElementById('d' + dayIdx + '-bike-' + k); if (el) el.value = ''; });
 }
 
 // ── SAVE WORKOUT ──
@@ -1269,29 +1390,46 @@ function saveWorkout(dayIdx) {
 
   if (!exercises.length && !bike.time) { toast('Nothing to save'); return; }
 
-  // PR check
-  const prs = DB.get('prs');
+  // PR detection vs all prior history (excludes bodyweight/time moves)
+  const priorBest = new Map(computePRs(DB.get('workouts')).map(p => [p.name, p.best]));
   const newPRs = [];
   exercises.forEach(ex => {
+    if (NON_WEIGHT.has(ex.name)) return;
     const best = Math.max(...ex.sets.map(s => parseFloat(s.w) || 0));
-    if (best > 0) {
-      const prev = prs.find(p => p.name === ex.name);
-      if (!prev || best > prev.best) {
-        if (prev) prev.best = best; else prs.push({ name: ex.name, best });
-        newPRs.push(ex.name);
-      }
-    }
+    if (best > 0 && best > (priorBest.get(ex.name) || 0)) newPRs.push(ex.name);
   });
-  DB.set('prs', prs);
 
   const sessions = DB.get('workouts');
-  sessions.unshift({ id: Date.now(), date: new Date().toISOString(), day: dayIdx, dayLabel: day.label, focus: day.focus, exercises, bike, prs: newPRs });
+  sessions.unshift({
+    id: Date.now(),
+    date: new Date().toISOString(),
+    dateLocal: todayLocal(),
+    day: dayIdx,
+    dayLabel: day.label,
+    focus: day.focus,
+    exercises,
+    bike,
+    prs: newPRs,
+  });
   DB.set('workouts', sessions);
+
+  clearDay(dayIdx);
+  renderWorkoutRefs();
 
   if (newPRs.length) toast('PR! ' + newPRs[0] + (newPRs.length > 1 ? ' +' + (newPRs.length - 1) + ' more' : ''));
   else toast('Day ' + (dayIdx + 1) + ' saved');
 
-  pushToGist();
+  scheduleSync();
+}
+
+function deleteWorkout(id) {
+  if (!confirm('Delete this session? This cannot be undone.')) return;
+  DB.set('workouts', DB.get('workouts').filter(s => s.id !== id));
+  addTombstone(id);
+  renderHistory();
+  renderDash();
+  toast('Session deleted');
+  scheduleSync();
 }
 
 // ── WEIGHT ──
@@ -1308,13 +1446,15 @@ function logWeight() {
   document.getElementById('w-note').value = '';
   renderWeightLog();
   toast('Weight logged');
-  pushToGist();
+  scheduleSync();
 }
 
 function deleteWeight(id) {
   DB.set('weights', DB.get('weights').filter(e => e.id !== id));
+  addTombstone(id);
   renderWeightLog();
-  pushToGist();
+  toast('Entry deleted');
+  scheduleSync();
 }
 
 function renderWeightLog() {
@@ -1362,7 +1502,10 @@ function renderHistory() {
     return `<div class="history-session">
       <div class="history-session-header">
         <span class="history-day-label">${s.dayLabel} · ${s.focus}</span>
-        <span class="history-date">${fmtDate(s.date.split('T')[0])}</span>
+        <div class="history-head-right">
+          <span class="history-date">${fmtDate(sessionDate(s))}</span>
+          <button class="btn-danger" onclick="deleteWorkout(${s.id})">✕</button>
+        </div>
       </div>
       ${exRows}
       ${bikeStr ? '<div class="history-bike-row">' + bikeStr + '</div>' : ''}
@@ -1370,21 +1513,29 @@ function renderHistory() {
   }).join('');
 }
 
-// ── WEIGHT CHART ──
+// ── WEIGHT CHART (time-scaled x-axis) ──
 function renderChart(weights) {
   const el = document.getElementById('dash-chart');
   if (!weights.length) { el.innerHTML = ''; return; }
-  const pts = weights.slice().reverse().slice(-30);
+  const pts = weights.slice().reverse().slice(-30); // oldest → newest
   if (pts.length < 2) { el.innerHTML = ''; return; }
+
   const W = 320, H = 90, PAD = { t: 10, r: 10, b: 18, l: 32 };
   const vals = pts.map(p => p.weight);
   const minV = Math.min(...vals, 200) - 2;
   const maxV = Math.max(...vals, 200) + 2;
-  const sx = i => PAD.l + (i / (pts.length - 1)) * (W - PAD.l - PAD.r);
+
+  const t0 = new Date(pts[0].date + 'T00:00:00').getTime();
+  const t1 = new Date(pts[pts.length - 1].date + 'T00:00:00').getTime();
+  const span = (t1 - t0) || 1;
+
+  const sx = p => PAD.l + ((new Date(p.date + 'T00:00:00').getTime() - t0) / span) * (W - PAD.l - PAD.r);
   const sy = v => PAD.t + (1 - (v - minV) / (maxV - minV)) * (H - PAD.t - PAD.b);
-  const linePts = pts.map((p, i) => `${sx(i)},${sy(p.weight)}`).join(' ');
-  const areaPath = `M${sx(0)},${sy(pts[0].weight)} ` + pts.map((p, i) => `L${sx(i)},${sy(p.weight)}`).join(' ') + ` L${sx(pts.length - 1)},${H - PAD.b} L${sx(0)},${H - PAD.b} Z`;
+
+  const linePts = pts.map(p => `${sx(p)},${sy(p.weight)}`).join(' ');
+  const areaPath = `M${sx(pts[0])},${sy(pts[0].weight)} ` + pts.map(p => `L${sx(p)},${sy(p.weight)}`).join(' ') + ` L${sx(pts[pts.length-1])},${H - PAD.b} L${sx(pts[0])},${H - PAD.b} Z`;
   const goalY = sy(200);
+
   el.innerHTML = `<div class="chart-wrap">
     <svg class="chart-svg" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
       <defs><linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
@@ -1396,9 +1547,9 @@ function renderChart(weights) {
       <text class="chart-label" x="${PAD.l - 2}" y="${H - PAD.b}" text-anchor="end">${Math.round(minV)}</text>
       <path class="chart-area" d="${areaPath}"/>
       <polyline class="chart-line" points="${linePts}"/>
-      <circle class="chart-dot" cx="${sx(pts.length - 1)}" cy="${sy(pts[pts.length - 1].weight)}" r="3"/>
+      <circle class="chart-dot" cx="${sx(pts[pts.length-1])}" cy="${sy(pts[pts.length-1].weight)}" r="3"/>
     </svg>
-    <div class="chart-range"><span>${fmtDate(pts[0].date).replace(/,.*/, '')}</span><span>${fmtDate(pts[pts.length - 1].date).replace(/,.*/, '')}</span></div>
+    <div class="chart-range"><span>${fmtDate(pts[0].date).replace(/,.*/, '')}</span><span>${fmtDate(pts[pts.length-1].date).replace(/,.*/, '')}</span></div>
   </div>`;
 }
 
@@ -1406,7 +1557,6 @@ function renderChart(weights) {
 function renderDash() {
   const weights = DB.get('weights');
   const workouts = DB.get('workouts');
-  const prs = DB.get('prs');
   const START = 250, GOAL = 200;
 
   if (weights.length) {
@@ -1418,14 +1568,18 @@ function renderDash() {
     if (weights.length > 1) {
       const diff = (weights[0].weight - weights[1].weight).toFixed(1);
       document.getElementById('dash-weight-delta').innerHTML = `<span class="${diff < 0 ? 'delta-down' : diff > 0 ? 'delta-up' : 'delta-none'}">${diff > 0 ? '+' : ''}${diff} from last</span>`;
+    } else {
+      document.getElementById('dash-weight-delta').innerHTML = '';
     }
   } else {
     document.getElementById('dash-weight').textContent = '—';
     document.getElementById('dash-lost').textContent = '—';
+    document.getElementById('dash-weight-delta').innerHTML = '';
+    document.getElementById('dash-to-goal').innerHTML = '';
   }
 
   document.getElementById('dash-workouts').textContent = workouts.length;
-  document.getElementById('dash-prs').textContent = prs.length;
+  document.getElementById('dash-prs').textContent = computePRs(workouts).length;
 
   renderChart(weights);
 
@@ -1436,18 +1590,18 @@ function renderDash() {
 
   const rwkEl = document.getElementById('dash-recent-workouts');
   rwkEl.innerHTML = workouts.length
-    ? workouts.slice(0, 3).map(s => `<div class="recent-log-item"><div><div class="log-date">${fmtDate(s.date.split('T')[0])}</div><div class="log-desc">${s.dayLabel} · ${s.focus}</div></div><div class="log-val" style="font-size:13px;color:var(--green)">${s.exercises.length} ex</div></div>`).join('')
+    ? workouts.slice(0, 3).map(s => `<div class="recent-log-item"><div><div class="log-date">${fmtDate(sessionDate(s))}</div><div class="log-desc">${s.dayLabel} · ${s.focus}</div></div><div class="log-val" style="font-size:13px;color:var(--green)">${s.exercises.length} ex</div></div>`).join('')
     : '<div class="recent-log-item"><div class="log-desc" style="color:var(--muted)">No workouts logged yet</div></div>';
 }
 
 // ── BACKUP / RESTORE ──
 function exportData() {
-  const data = { exported: new Date().toISOString(), weights: DB.get('weights'), workouts: DB.get('workouts'), prs: DB.get('prs') };
+  const data = { exported: new Date().toISOString(), weights: DB.get('weights'), workouts: DB.get('workouts') };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'grey-tracker-backup-' + new Date().toISOString().split('T')[0] + '.json';
+  a.download = 'grey-tracker-backup-' + todayLocal() + '.json';
   a.click();
   URL.revokeObjectURL(url);
   toast('Backup downloaded');
@@ -1460,13 +1614,13 @@ document.getElementById('importInput').addEventListener('change', function(e) {
   reader.onload = function(ev) {
     try {
       const data = JSON.parse(ev.target.result);
-      if (data.weights) DB.set('weights', data.weights);
-      if (data.workouts) DB.set('workouts', data.workouts);
-      if (data.prs) DB.set('prs', data.prs);
+      // Merge imported records in rather than blindly overwriting
+      if (data.weights) DB.set('weights', mergeById(data.weights, DB.get('weights')).sort((a, b) => (b.date || '').localeCompare(a.date || '')));
+      if (data.workouts) DB.set('workouts', mergeById(data.workouts, DB.get('workouts')).sort((a, b) => (b.id || 0) - (a.id || 0)));
       renderDash();
       toast('Data restored');
-      pushToGist();
-    } catch(e) { toast('Invalid file'); }
+      scheduleSync();
+    } catch (e) { toast('Invalid file'); }
   };
   reader.readAsText(file);
   this.value = '';
@@ -1475,13 +1629,13 @@ document.getElementById('importInput').addEventListener('change', function(e) {
 // ── WAKE LOCK ──
 let wakeLock = null;
 async function requestWakeLock() {
-  if ('wakeLock' in navigator) { try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e) {} }
+  if ('wakeLock' in navigator) { try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {} }
 }
 async function releaseWakeLock() {
-  if (wakeLock) { try { await wakeLock.release(); } catch(e) {} wakeLock = null; }
+  if (wakeLock) { try { await wakeLock.release(); } catch (e) {} wakeLock = null; }
 }
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && document.getElementById('page-workout').classList.contains('active')) requestWakeLock();
+  if (document.visibilityState === 'visible' && currentPage === 'workout') requestWakeLock();
 });
 
 // ── TOAST ──
@@ -1494,18 +1648,22 @@ function toast(msg) {
   toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
 }
 
-// ── UTILS ──
-function fmtDate(d) {
-  if (!d) return '';
-  const dt = new Date(d + (d.includes('T') ? '' : 'T00:00:00'));
-  return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
-
 // ── INIT ──
-document.getElementById('w-date').value = new Date().toISOString().split('T')[0];
+document.getElementById('w-date').value = todayLocal();
 initSets();
+renderWorkoutRefs();
 renderDash();
-pullFromGist(); // load remote data on startup
+
+// Sync on open (merges, never blind-overwrites), and when returning to the app
+if (getCfg().token) syncNow();
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && getCfg().token) scheduleSync();
+});
+
+// Offline support
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
 </script>
 </body>
 </html>
