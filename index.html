@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Grey Tracker">
@@ -46,8 +46,8 @@ html, body {
 #nav {
   position: fixed;
   bottom: 0; left: 0; right: 0;
-  height: calc(56px + var(--safe-bottom));
-  padding-bottom: var(--safe-bottom);
+  height: calc(58px + max(var(--safe-bottom), 8px));
+  padding-bottom: max(var(--safe-bottom), 8px);
   background: #0f0f0f;
   border-top: 1px solid var(--border);
   display: flex;
@@ -80,7 +80,7 @@ html, body {
 #app {
   position: fixed;
   top: 0; left: 0; right: 0;
-  bottom: calc(56px + var(--safe-bottom));
+  bottom: calc(58px + max(var(--safe-bottom), 8px));
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding-top: calc(var(--safe-top) + 0px);
