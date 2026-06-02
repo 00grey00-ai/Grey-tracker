@@ -197,6 +197,10 @@ html, body {
 .delta-up { color: var(--red); }
 .delta-none { color: var(--muted); }
 
+#backup-status { padding: 0 16px 8px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.5px; }
+.backup-ok { color: var(--muted); }
+.backup-warn { color: var(--accent); }
+
 .section-head {
   padding: 16px 16px 8px;
   font-family: 'DM Mono', monospace;
@@ -746,10 +750,11 @@ html, body {
     <div id="dash-recent-workouts"></div>
 
     <div class="section-head">Data</div>
+    <div id="backup-status"></div>
     <div style="padding:0 16px 32px;display:flex;gap:10px;">
-      <button class="btn-ghost" style="flex:1" onclick="exportData()">EXPORT BACKUP</button>
-      <button class="btn-ghost" style="flex:1" onclick="document.getElementById('importInput').click()">IMPORT BACKUP</button>
-      <input type="file" id="importInput" accept=".json" style="display:none">
+      <button class="btn-ghost" style="flex:1" onclick="exportData()">SAVE TO FILES</button>
+      <button class="btn-ghost" style="flex:1" onclick="document.getElementById('importInput').click()">RESTORE</button>
+      <input type="file" id="importInput" accept=".json,application/json" style="display:none">
     </div>
   </div>
 
@@ -1592,18 +1597,67 @@ function renderDash() {
   rwkEl.innerHTML = workouts.length
     ? workouts.slice(0, 3).map(s => `<div class="recent-log-item"><div><div class="log-date">${fmtDate(sessionDate(s))}</div><div class="log-desc">${s.dayLabel} · ${s.focus}</div></div><div class="log-val" style="font-size:13px;color:var(--green)">${s.exercises.length} ex</div></div>`).join('')
     : '<div class="recent-log-item"><div class="log-desc" style="color:var(--muted)">No workouts logged yet</div></div>';
+
+  renderBackupStatus();
 }
 
 // ── BACKUP / RESTORE ──
-function exportData() {
+function markBackup() {
+  localStorage.setItem('gt-lastbackup', new Date().toISOString());
+  renderBackupStatus();
+}
+
+function renderBackupStatus() {
+  const el = document.getElementById('backup-status');
+  if (!el) return;
+  const lb = localStorage.getItem('gt-lastbackup');
+  const weights = DB.get('weights'), workouts = DB.get('workouts');
+  const hasData = weights.length || workouts.length;
+  if (!lb) {
+    el.innerHTML = hasData
+      ? '<span class="backup-warn">Never saved to Files — back up recommended</span>'
+      : '<span class="backup-ok">No data to back up yet</span>';
+    return;
+  }
+  const lbMs = new Date(lb).getTime();
+  const days = Math.floor((Date.now() - lbMs) / 86400000);
+  const newest = Math.max(0, ...weights.map(w => w.id || 0), ...workouts.map(w => w.id || 0));
+  const stale = newest > lbMs; // new data logged since last file backup
+  const ageStr = days <= 0 ? 'today' : days === 1 ? '1 day ago' : days + ' days ago';
+  if (stale || days >= 7) {
+    el.innerHTML = `<span class="backup-warn">Last saved to Files ${ageStr}${stale ? ' · new data since' : ''} — back up recommended</span>`;
+  } else {
+    el.innerHTML = `<span class="backup-ok">Last saved to Files ${ageStr}</span>`;
+  }
+}
+
+async function exportData() {
   const data = { exported: new Date().toISOString(), weights: DB.get('weights'), workouts: DB.get('workouts') };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const json = JSON.stringify(data, null, 2);
+  const fname = 'grey-tracker-backup-' + todayLocal() + '.json';
+
+  // Preferred on iPhone: native share sheet → "Save to Files" / AirDrop / email
+  try {
+    const file = new File([json], fname, { type: 'application/json' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: 'Grey Tracker Backup' });
+      markBackup();
+      toast('Backup saved');
+      return;
+    }
+  } catch (e) {
+    if (e && e.name === 'AbortError') return; // user cancelled the share sheet — don't double-download
+  }
+
+  // Fallback (desktop / unsupported): direct download
+  const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'grey-tracker-backup-' + todayLocal() + '.json';
+  a.download = fname;
   a.click();
   URL.revokeObjectURL(url);
+  markBackup();
   toast('Backup downloaded');
 }
 

@@ -1,6 +1,6 @@
 // Grey Tracker service worker — offline shell caching
 // Bump CACHE version whenever index.html changes to force an update.
-const CACHE = 'grey-tracker-v2';
+const CACHE = 'grey-tracker-v3';
 const CORE = [
   './',
   './index.html',
