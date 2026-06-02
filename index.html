@@ -1874,9 +1874,22 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && getCfg().token) scheduleSync();
 });
 
-// Offline support
+// Offline support + auto-update: reload once when a new service worker takes control
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (refreshing) return;
+    refreshing = true;
+    location.reload();
+  });
+  window.addEventListener('load', async () => {
+    try {
+      const reg = await navigator.serviceWorker.register('sw.js');
+      // Proactively check for a new version each launch
+      reg.update();
+      setInterval(() => reg.update(), 60 * 60 * 1000);
+    } catch (e) {}
+  });
 }
 </script>
 </body>
