@@ -486,6 +486,44 @@ html, body {
 .set-last b { color: var(--accent-dim); font-weight: 500; }
 .set-last.none { color: var(--muted2); font-style: italic; }
 
+.set-coach {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--accent);
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+.set-coach b { color: var(--accent); font-weight: 500; }
+.coach-note { color: var(--muted); font-size: 10px; }
+
+.effort-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+.effort-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-right: 2px;
+}
+.effort-btn {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  padding: 6px 9px;
+  border-radius: 2px;
+  cursor: pointer;
+}
+.effort-btn.active { background: var(--accent-bg); border-color: var(--accent-dim); color: var(--accent); }
+
 .set-row {
   display: grid;
   grid-template-columns: 28px 1fr 1fr auto;
@@ -1219,23 +1257,33 @@ const DB = {
 // Exercises measured by time/bodyweight, NOT weight — excluded from weight PRs
 const NON_WEIGHT = new Set(['Plank']);
 
+// Each day also carries `reps` ([min,max] target range per exercise) and `inc` (smallest
+// load increment in lb) so the progression coach knows the target window and how much to add.
 const DAYS_CONFIG = [
   { label: 'Day 1', focus: 'Upper Push',
     sets: ['d0-chest-press','d0-cable-fly','d0-incline-db','d0-shoulder-press','d0-lateral-raise','d0-tri-pushdown','d0-tri-ext'],
     names: ['Chest Press Machine','Cable Fly','Incline DB Press','Shoulder Press','Lateral Raise','Tricep Pushdown','Overhead Tri Ext'],
-    counts: [3,3,3,3,3,3,2] },
+    counts: [3,3,3,3,3,3,2],
+    reps: [[10,12],[12,15],[8,10],[10,12],[12,15],[10,12],[10,12]],
+    inc:  [5,5,5,5,5,5,5] },
   { label: 'Day 2', focus: 'Lower Body',
     sets: ['d1-leg-press','d1-leg-curl','d1-leg-ext','d1-hip-ab','d1-hip-ad','d1-calf'],
     names: ['Leg Press','Leg Curl','Leg Extension','Hip Abductor','Hip Adductor','Seated Calf Raise'],
-    counts: [4,3,3,3,3,3] },
+    counts: [4,3,3,3,3,3],
+    reps: [[10,12],[10,12],[12,15],[12,15],[12,15],[12,15]],
+    inc:  [10,5,5,5,5,5] },
   { label: 'Day 3', focus: 'Upper Pull',
     sets: ['d2-cable-row','d2-lat-pull','d2-machine-row','d2-rev-fly','d2-face-pull','d2-db-curl','d2-hammer'],
     names: ['Seated Cable Row','Lat Pulldown','Machine Row','Pec Deck Rev Fly','Face Pull','DB Curl','Hammer Curl'],
-    counts: [4,3,3,3,3,3,2] },
+    counts: [4,3,3,3,3,3,2],
+    reps: [[10,12],[10,12],[10,12],[12,15],[12,15],[10,12],[10,12]],
+    inc:  [5,5,5,5,5,5,5] },
   { label: 'Day 4', focus: 'Full Body + Bike',
     sets: ['d3-leg-press','d3-chest-press','d3-lat-pull','d3-shoulder-press','d3-ab-crunch','d3-plank'],
     names: ['Leg Press','Chest Press','Lat Pulldown','Shoulder Press','Ab Crunch','Plank'],
-    counts: [3,3,3,3,3,3] },
+    counts: [3,3,3,3,3,3],
+    reps: [[10,12],[10,12],[10,12],[10,12],[12,15],[0,0]],
+    inc:  [10,5,5,5,5,0] },
 ];
 
 let currentPage = 'dash';
@@ -1256,18 +1304,105 @@ function fmtDate(d) {
 // Display date for a stored session (prefers local-captured date)
 function sessionDate(s) { return s.dateLocal || (s.date ? s.date.split('T')[0] : ''); }
 
-// ── PERSONAL RECORDS (derived from workout history) ──
+// Estimated 1-rep-max (Epley). Collapses any weight×reps into one comparable number, so rep
+// gains count as progress and between-set weight changes don't confuse the trend. Reps capped
+// for formula sanity at high ranges.
+function e1rm(w, r) {
+  w = parseFloat(w); r = parseFloat(r);
+  if (!(w > 0) || !(r > 0)) return 0;
+  return w * (1 + Math.min(r, 20) / 30);
+}
+function bestE1rm(sets) {
+  return Math.max(0, ...(sets || []).map(s => e1rm(s.w, s.r)));
+}
+
+// ── PERSONAL RECORDS (derived from history, ranked by estimated 1RM) ──
 function computePRs(workouts) {
   const map = new Map();
   workouts.forEach(s => (s.exercises || []).forEach(ex => {
     if (NON_WEIGHT.has(ex.name)) return;
-    const best = Math.max(...ex.sets.map(st => parseFloat(st.w) || 0));
+    const best = bestE1rm(ex.sets);
     if (best > 0) {
       const cur = map.get(ex.name);
       if (!cur || best > cur.best) map.set(ex.name, { name: ex.name, best });
     }
   }));
   return [...map.values()];
+}
+
+// ── PROGRESSION COACH ──
+// Most recent real (non-missed) session for a day.
+function lastSessionForDay(dayIdx) {
+  return DB.get('workouts').find(s => s.day === dayIdx && !s.missed);
+}
+
+// Suggest next-session targets for every exercise in a day, via double progression gated by
+// the logged effort tap. Returns objects: { name, kind, w, r, text, note }.
+function suggestNext(dayIdx) {
+  const day = DAYS_CONFIG[dayIdx];
+  const last = lastSessionForDay(dayIdx);
+  return day.names.map((name, ei) => {
+    const range = day.reps[ei] || [0, 0];
+    const rmin = range[0], rmax = range[1];
+    const inc = day.inc[ei] || 5;
+    const isTime = NON_WEIGHT.has(name);
+    const prev = last ? (last.exercises || []).find(e => e.name === name) : null;
+
+    if (!prev || !prev.sets || !prev.sets.length) {
+      if (isTime) return { name, kind: 'time', w: '', r: '', text: 'Build on last hold', note: 'no data yet' };
+      return { name, kind: 'weight', w: '', r: String(rmin || ''), text: `Pick a weight · aim ${rmin}–${rmax}`, note: 'no data yet' };
+    }
+
+    if (isTime) {
+      const bestR = Math.max(0, ...prev.sets.map(s => parseFloat(s.r) || 0));
+      const tgt = bestR > 0 ? bestR + 5 : '';
+      return { name, kind: 'time', w: '', r: tgt ? String(tgt) : '', text: tgt ? `Hold ~${tgt}s` : 'Log a hold', note: bestR ? `beat ${bestR}s` : '' };
+    }
+
+    // weight exercise — anchor on the top set by e1RM
+    const top = prev.sets.reduce((b, s) => (e1rm(s.w, s.r) > e1rm(b.w, b.r) ? s : b), prev.sets[0]);
+    const topW = parseFloat(top.w) || 0;
+    const topR = parseFloat(top.r) || 0;
+    const effort = prev.effort; // 'more' | 'limit' | 'fail' | undefined
+
+    if (topW <= 0) return { name, kind: 'weight', w: '', r: String(rmin), text: `Aim ${rmin}–${rmax}`, note: '' };
+
+    const hitTop = topR >= rmax;
+    const belowMin = topR < rmin;
+    let w = topW, r, note;
+
+    if (hitTop && effort !== 'fail') {
+      w = topW + inc; r = rmin;
+      note = effort === 'more' ? `+${inc} lb · had reps in reserve` : `+${inc} lb · hit top of range`;
+    } else if (hitTop && effort === 'fail') {
+      w = topW + inc; r = rmin;
+      note = `+${inc} lb · small jump`;
+    } else if (belowMin) {
+      w = topW; r = rmin;
+      note = 'hold load · rebuild reps';
+    } else {
+      w = topW; r = Math.min(topR + 1, rmax);
+      note = 'same load · +1 rep';
+    }
+    return { name, kind: 'weight', w: String(w), r: String(r), text: `${w} × ${r}`, note };
+  });
+}
+
+// ── EFFORT TAP (1 per exercise) ──
+function setEffort(cid, val) {
+  const btns = document.querySelectorAll('#eff-' + cid + ' .effort-btn');
+  const target = [...btns].find(b => b.dataset.v === val);
+  const wasActive = target && target.classList.contains('active');
+  btns.forEach(b => b.classList.remove('active'));
+  if (target && !wasActive) target.classList.add('active'); // tapping the active one clears it
+}
+function getEffort(cid) {
+  const a = document.querySelector('#eff-' + cid + ' .effort-btn.active');
+  return a ? a.dataset.v : '';
+}
+function setEffortDisplay(cid, val) {
+  const btns = document.querySelectorAll('#eff-' + cid + ' .effort-btn');
+  btns.forEach(b => b.classList.toggle('active', b.dataset.v === val));
 }
 
 // ── SYNC ENGINE (GitHub Gist, merge-based) ──
@@ -1435,10 +1570,12 @@ function showPage(name) {
 }
 
 // ── SET INPUTS ──
-function buildSets(containerId, count) {
+function buildSets(containerId, count, isTime) {
   const el = document.getElementById('sets-' + containerId);
   if (!el) return;
-  el.innerHTML = '<div class="set-last" id="last-' + containerId + '"></div>';
+  el.innerHTML =
+    '<div class="set-coach" id="coach-' + containerId + '"></div>' +
+    '<div class="set-last" id="last-' + containerId + '"></div>';
   for (let i = 0; i < count; i++) {
     const row = document.createElement('div');
     row.className = 'set-row';
@@ -1451,6 +1588,18 @@ function buildSets(containerId, count) {
       </button>`;
     el.appendChild(row);
   }
+  // 1-tap effort selector (skip for time/bodyweight holds where it's less meaningful)
+  if (!isTime) {
+    const eff = document.createElement('div');
+    eff.className = 'effort-row';
+    eff.id = 'eff-' + containerId;
+    eff.innerHTML =
+      '<span class="effort-label">Effort</span>' +
+      '<button class="effort-btn" data-v="more" onclick="setEffort(\'' + containerId + '\',\'more\')">Had more</button>' +
+      '<button class="effort-btn" data-v="limit" onclick="setEffort(\'' + containerId + '\',\'limit\')">At limit</button>' +
+      '<button class="effort-btn" data-v="fail" onclick="setEffort(\'' + containerId + '\',\'fail\')">Failed</button>';
+    el.appendChild(eff);
+  }
 }
 
 function toggleDone(id, i) {
@@ -1458,29 +1607,48 @@ function toggleDone(id, i) {
 }
 
 function initSets() {
-  DAYS_CONFIG.forEach(day => day.sets.forEach((sid, ei) => buildSets(sid, day.counts[ei])));
+  DAYS_CONFIG.forEach(day => day.sets.forEach((sid, ei) => buildSets(sid, day.counts[ei], NON_WEIGHT.has(day.names[ei]))));
 }
 
-// Fill each exercise card with last logged session for that movement
+// Fill each exercise card with its last logged session AND the coach's suggested next target,
+// and pre-fill the set inputs' placeholders with that target so it's one tap to accept.
 function renderWorkoutRefs() {
   const workouts = DB.get('workouts');
-  DAYS_CONFIG.forEach(day => {
+  DAYS_CONFIG.forEach((day, di) => {
+    const suggestions = suggestNext(di);
     day.sets.forEach((sid, ei) => {
-      const el = document.getElementById('last-' + sid);
-      if (!el) return;
       const name = day.names[ei];
-      let found = null;
-      for (const s of workouts) {
-        const ex = (s.exercises || []).find(e => e.name === name);
-        if (ex) { found = { s, ex }; break; }
+
+      // Last-session line
+      const lastEl = document.getElementById('last-' + sid);
+      if (lastEl) {
+        let found = null;
+        for (const s of workouts) {
+          const ex = (s.exercises || []).find(e => e.name === name);
+          if (ex) { found = { s, ex }; break; }
+        }
+        if (found) {
+          const str = found.ex.sets.map(st => st.w + '×' + st.r).join(' · ');
+          lastEl.className = 'set-last';
+          lastEl.innerHTML = 'Last (' + fmtDate(sessionDate(found.s)).replace(/,.*/, '') + '): <b>' + str + '</b>';
+        } else {
+          lastEl.className = 'set-last none';
+          lastEl.textContent = 'No previous data';
+        }
       }
-      if (found) {
-        const str = found.ex.sets.map(st => st.w + '×' + st.r).join(' · ');
-        el.className = 'set-last';
-        el.innerHTML = 'Last (' + fmtDate(sessionDate(found.s)).replace(/,.*/, '') + '): <b>' + str + '</b>';
-      } else {
-        el.className = 'set-last none';
-        el.textContent = 'No previous data';
+
+      // Coach target line + placeholder pre-fill
+      const sug = suggestions[ei];
+      const coachEl = document.getElementById('coach-' + sid);
+      if (coachEl && sug) {
+        coachEl.innerHTML = '🎯 Target: <b>' + sug.text + '</b>' + (sug.note ? ' <span class="coach-note">· ' + sug.note + '</span>' : '');
+      }
+      // pre-fill placeholders (don't touch values the user may have typed)
+      for (let i = 0; i < day.counts[ei]; i++) {
+        const w = document.getElementById('inp-' + sid + '-' + i + '-w');
+        const r = document.getElementById('inp-' + sid + '-' + i + '-r');
+        if (w) w.placeholder = sug && sug.w ? sug.w : (sug && sug.kind === 'time' ? '—' : 'lbs');
+        if (r) r.placeholder = sug && sug.r ? sug.r : (sug && sug.kind === 'time' ? 'sec' : 'reps');
       }
     });
   });
@@ -1553,6 +1721,7 @@ function clearDay(dayIdx) {
       const r = document.getElementById('inp-' + sid + '-' + i + '-r'); if (r) r.value = '';
       const b = document.getElementById('btn-' + sid + '-' + i); if (b) b.classList.remove('done');
     }
+    document.querySelectorAll('#eff-' + sid + ' .effort-btn').forEach(b => b.classList.remove('active'));
   });
   ['time', 'dist', 'rpm', 'res', 'cal'].forEach(k => { const el = document.getElementById('d' + dayIdx + '-bike-' + k); if (el) el.value = ''; });
 }
@@ -1570,7 +1739,12 @@ function saveWorkout(dayIdx) {
       const done = document.getElementById('btn-' + sid + '-' + i)?.classList.contains('done');
       if (w || r) sets.push({ w: w || '—', r: r || '—', done });
     }
-    if (sets.length) exercises.push({ name: day.names[ei], sets });
+    if (sets.length) {
+      const effort = getEffort(sid);
+      const ex = { name: day.names[ei], sets };
+      if (effort) ex.effort = effort;
+      exercises.push(ex);
+    }
   });
 
   const di = dayIdx;
@@ -1605,13 +1779,14 @@ function saveWorkout(dayIdx) {
     return;
   }
 
-  // PR detection vs all prior history (excludes bodyweight/time moves)
+  // PR detection vs all prior history, by estimated 1RM (so rep gains count). Excludes
+  // bodyweight/time moves.
   const priorBest = new Map(computePRs(DB.get('workouts')).map(p => [p.name, p.best]));
   const newPRs = [];
   exercises.forEach(ex => {
     if (NON_WEIGHT.has(ex.name)) return;
-    const best = Math.max(...ex.sets.map(s => parseFloat(s.w) || 0));
-    if (best > 0 && best > (priorBest.get(ex.name) || 0)) newPRs.push(ex.name);
+    const best = bestE1rm(ex.sets);
+    if (best > 0 && best > (priorBest.get(ex.name) || 0) + 0.01) newPRs.push(ex.name);
   });
 
   const sessions = DB.get('workouts');
@@ -1713,6 +1888,7 @@ function populateDay(s) {
       if (r) r.value = (st.r && st.r !== '—') ? st.r : '';
       if (b) b.classList.toggle('done', !!st.done);
     });
+    setEffortDisplay(sid, ex.effort || '');
   });
   const bk = s.bike || {};
   ['time', 'dist', 'rpm', 'res', 'cal'].forEach(k => {
