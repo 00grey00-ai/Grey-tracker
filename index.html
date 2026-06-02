@@ -534,11 +534,47 @@ html, body {
   margin-bottom: 10px;
 }
 
+.cardio-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.cardio-head .cardio-title { margin-bottom: 0; }
+
+.cardio-progress-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 5px 9px;
+  border-radius: 2px;
+  cursor: pointer;
+}
+.cardio-progress-btn svg { width: 13px; height: 13px; }
+.cardio-progress-btn:active { color: var(--green); border-color: var(--green-dim); }
+
 .cardio-fields {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 8px;
 }
+
+/* ── BIKE PROGRESS MODAL ── */
+#bike-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 150; align-items: flex-end; }
+#bike-modal.open { display: flex; }
+.metric-chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin-bottom: 14px; padding-bottom: 2px; }
+.metric-chips::-webkit-scrollbar { display: none; }
+.metric-chip { flex-shrink: 0; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; padding: 7px 11px; border-radius: 2px; cursor: pointer; }
+.metric-chip.active { background: var(--accent-bg); border-color: var(--accent-dim); color: var(--accent); }
+.bike-summary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 14px; }
+.bike-summary .stat-card { padding: 10px 12px; }
 
 .section-divider {
   padding: 12px 16px 6px;
@@ -853,9 +889,17 @@ html, body {
 
       <div class="section-divider">Cardio</div>
       <div class="cardio-card">
-        <div class="cardio-title">Stationary Bike</div>
+        <div class="cardio-head">
+          <div class="cardio-title">Stationary Bike</div>
+          <button class="cardio-progress-btn" onclick="openBikeModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>
+            Progress
+          </button>
+        </div>
         <div class="cardio-fields">
           <div class="field"><label>Time (min)</label><input class="set-input" id="d0-bike-time" type="number" placeholder="15" inputmode="numeric"></div>
+          <div class="field"><label>Distance (mi)</label><input class="set-input" id="d0-bike-dist" type="number" step="0.01" placeholder="—" inputmode="decimal"></div>
+          <div class="field"><label>Avg RPM</label><input class="set-input" id="d0-bike-rpm" type="number" placeholder="—" inputmode="numeric"></div>
           <div class="field"><label>Resistance</label><input class="set-input" id="d0-bike-res" type="number" placeholder="5" inputmode="numeric"></div>
           <div class="field"><label>Calories</label><input class="set-input" id="d0-bike-cal" type="number" placeholder="—" inputmode="numeric"></div>
         </div>
@@ -901,9 +945,17 @@ html, body {
 
       <div class="section-divider">Cardio</div>
       <div class="cardio-card">
-        <div class="cardio-title">Stationary Bike</div>
+        <div class="cardio-head">
+          <div class="cardio-title">Stationary Bike</div>
+          <button class="cardio-progress-btn" onclick="openBikeModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>
+            Progress
+          </button>
+        </div>
         <div class="cardio-fields">
           <div class="field"><label>Time (min)</label><input class="set-input" id="d1-bike-time" type="number" placeholder="20" inputmode="numeric"></div>
+          <div class="field"><label>Distance (mi)</label><input class="set-input" id="d1-bike-dist" type="number" step="0.01" placeholder="—" inputmode="decimal"></div>
+          <div class="field"><label>Avg RPM</label><input class="set-input" id="d1-bike-rpm" type="number" placeholder="—" inputmode="numeric"></div>
           <div class="field"><label>Resistance</label><input class="set-input" id="d1-bike-res" type="number" placeholder="5" inputmode="numeric"></div>
           <div class="field"><label>Calories</label><input class="set-input" id="d1-bike-cal" type="number" placeholder="—" inputmode="numeric"></div>
         </div>
@@ -958,9 +1010,17 @@ html, body {
 
       <div class="section-divider">Cardio</div>
       <div class="cardio-card">
-        <div class="cardio-title">Stationary Bike</div>
+        <div class="cardio-head">
+          <div class="cardio-title">Stationary Bike</div>
+          <button class="cardio-progress-btn" onclick="openBikeModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>
+            Progress
+          </button>
+        </div>
         <div class="cardio-fields">
           <div class="field"><label>Time (min)</label><input class="set-input" id="d2-bike-time" type="number" placeholder="15" inputmode="numeric"></div>
+          <div class="field"><label>Distance (mi)</label><input class="set-input" id="d2-bike-dist" type="number" step="0.01" placeholder="—" inputmode="decimal"></div>
+          <div class="field"><label>Avg RPM</label><input class="set-input" id="d2-bike-rpm" type="number" placeholder="—" inputmode="numeric"></div>
           <div class="field"><label>Resistance</label><input class="set-input" id="d2-bike-res" type="number" placeholder="5" inputmode="numeric"></div>
           <div class="field"><label>Calories</label><input class="set-input" id="d2-bike-cal" type="number" placeholder="—" inputmode="numeric"></div>
         </div>
@@ -1008,9 +1068,17 @@ html, body {
 
       <div class="section-divider">Cardio — Main Event</div>
       <div class="cardio-card">
-        <div class="cardio-title">Stationary Bike</div>
+        <div class="cardio-head">
+          <div class="cardio-title">Stationary Bike</div>
+          <button class="cardio-progress-btn" onclick="openBikeModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>
+            Progress
+          </button>
+        </div>
         <div class="cardio-fields">
           <div class="field"><label>Time (min)</label><input class="set-input" id="d3-bike-time" type="number" placeholder="28" inputmode="numeric"></div>
+          <div class="field"><label>Distance (mi)</label><input class="set-input" id="d3-bike-dist" type="number" step="0.01" placeholder="—" inputmode="decimal"></div>
+          <div class="field"><label>Avg RPM</label><input class="set-input" id="d3-bike-rpm" type="number" placeholder="—" inputmode="numeric"></div>
           <div class="field"><label>Resistance</label><input class="set-input" id="d3-bike-res" type="number" placeholder="5" inputmode="numeric"></div>
           <div class="field"><label>Calories</label><input class="set-input" id="d3-bike-cal" type="number" placeholder="—" inputmode="numeric"></div>
         </div>
@@ -1075,6 +1143,17 @@ html, body {
       <span id="sync-status-text"></span>
       <button class="btn-danger" style="margin-left:auto" onclick="disconnectSync()">DISCONNECT</button>
     </div>
+  </div>
+</div>
+
+<!-- ── BIKE PROGRESS MODAL ── -->
+<div id="bike-modal" onclick="closeBikeModal(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeBikeModal()">×</button>
+    <div class="modal-title">Bike Progress</div>
+    <div class="metric-chips" id="bike-chips"></div>
+    <div id="bike-chart"></div>
+    <div class="bike-summary" id="bike-summary"></div>
   </div>
 </div>
 
@@ -1367,7 +1446,7 @@ function clearDay(dayIdx) {
       const b = document.getElementById('btn-' + sid + '-' + i); if (b) b.classList.remove('done');
     }
   });
-  ['time', 'res', 'cal'].forEach(k => { const el = document.getElementById('d' + dayIdx + '-bike-' + k); if (el) el.value = ''; });
+  ['time', 'dist', 'rpm', 'res', 'cal'].forEach(k => { const el = document.getElementById('d' + dayIdx + '-bike-' + k); if (el) el.value = ''; });
 }
 
 // ── SAVE WORKOUT ──
@@ -1389,11 +1468,14 @@ function saveWorkout(dayIdx) {
   const di = dayIdx;
   const bike = {
     time: document.getElementById('d' + di + '-bike-time')?.value || '',
+    dist: document.getElementById('d' + di + '-bike-dist')?.value || '',
+    rpm: document.getElementById('d' + di + '-bike-rpm')?.value || '',
     res: document.getElementById('d' + di + '-bike-res')?.value || '',
     cal: document.getElementById('d' + di + '-bike-cal')?.value || '',
   };
+  const anyBike = bike.time || bike.dist || bike.rpm || bike.res || bike.cal;
 
-  if (!exercises.length && !bike.time) { toast('Nothing to save'); return; }
+  if (!exercises.length && !anyBike) { toast('Nothing to save'); return; }
 
   // PR detection vs all prior history (excludes bodyweight/time moves)
   const priorBest = new Map(computePRs(DB.get('workouts')).map(p => [p.name, p.best]));
@@ -1503,7 +1585,7 @@ function renderHistory() {
         <span class="history-ex-val">${setStr}</span>
       </div>`;
     }).join('');
-    const bikeStr = s.bike && s.bike.time ? `🚴 ${s.bike.time} min · R${s.bike.res || '—'} · ${s.bike.cal || '—'} cal` : '';
+    const bikeStr = bikeSummaryStr(s.bike);
     return `<div class="history-session">
       <div class="history-session-header">
         <span class="history-day-label">${s.dayLabel} · ${s.focus}</span>
@@ -1679,6 +1761,103 @@ document.getElementById('importInput').addEventListener('change', function(e) {
   reader.readAsText(file);
   this.value = '';
 });
+
+// ── BIKE PROGRESS ──
+const BIKE_METRICS = {
+  time: { label: 'Time', unit: 'min', cumulative: true },
+  dist: { label: 'Distance', unit: 'mi', cumulative: true },
+  cal:  { label: 'Calories', unit: 'cal', cumulative: true },
+  rpm:  { label: 'Avg RPM', unit: 'rpm', cumulative: false },
+  res:  { label: 'Resistance', unit: '', cumulative: false },
+};
+let currentBikeMetric = 'time';
+
+function fmtNum(n) { return (Math.round(n * 100) / 100).toString(); }
+function withUnit(v, u) { return u ? v + ' ' + u : v; }
+
+// One-line bike summary for history rows (only fields that have values)
+function bikeSummaryStr(b) {
+  if (!b) return '';
+  const parts = [];
+  if (b.time) parts.push(b.time + ' min');
+  if (b.dist) parts.push(b.dist + ' mi');
+  if (b.rpm) parts.push(b.rpm + ' rpm');
+  if (b.res) parts.push('R' + b.res);
+  if (b.cal) parts.push(b.cal + ' cal');
+  return parts.length ? '🚴 ' + parts.join(' · ') : '';
+}
+
+// All sessions with any bike data, oldest → newest
+function bikeSessions() {
+  return DB.get('workouts')
+    .filter(s => s.bike && (s.bike.time || s.bike.dist || s.bike.cal || s.bike.rpm || s.bike.res))
+    .map(s => Object.assign({ date: sessionDate(s) }, s.bike))
+    .reverse();
+}
+
+function openBikeModal() {
+  currentBikeMetric = 'time';
+  document.getElementById('bike-chips').innerHTML = Object.keys(BIKE_METRICS).map(k =>
+    `<button class="metric-chip${k === currentBikeMetric ? ' active' : ''}" data-m="${k}" onclick="selectBikeMetric('${k}')">${BIKE_METRICS[k].label}</button>`
+  ).join('');
+  renderBikeChart(currentBikeMetric);
+  document.getElementById('bike-modal').classList.add('open');
+}
+function closeBikeModal(e) {
+  if (e && e.target !== document.getElementById('bike-modal')) return;
+  document.getElementById('bike-modal').classList.remove('open');
+}
+function selectBikeMetric(m) {
+  currentBikeMetric = m;
+  document.querySelectorAll('#bike-chips .metric-chip').forEach(c => c.classList.toggle('active', c.dataset.m === m));
+  renderBikeChart(m);
+}
+
+function renderBikeChart(metric) {
+  const cfg = BIKE_METRICS[metric];
+  const pts = bikeSessions().map(b => ({ date: b.date, v: parseFloat(b[metric]) })).filter(p => p.date && isFinite(p.v));
+  const chartEl = document.getElementById('bike-chart');
+  const sumEl = document.getElementById('bike-summary');
+
+  if (pts.length < 2) {
+    chartEl.innerHTML = `<div class="empty-state" style="padding:36px 16px"><p>Not enough ${cfg.label.toLowerCase()} data yet</p></div>`;
+    sumEl.innerHTML = '';
+    return;
+  }
+
+  const W = 320, H = 120, PAD = { t: 12, r: 10, b: 18, l: 36 };
+  const vals = pts.map(p => p.v);
+  const minV = Math.min(...vals), maxV = Math.max(...vals);
+  const lo = minV === maxV ? minV - 1 : minV - (maxV - minV) * 0.12;
+  const hi = minV === maxV ? maxV + 1 : maxV + (maxV - minV) * 0.12;
+  const t0 = new Date(pts[0].date + 'T00:00:00').getTime();
+  const t1 = new Date(pts[pts.length - 1].date + 'T00:00:00').getTime();
+  const span = (t1 - t0) || 1;
+  const sx = p => PAD.l + ((new Date(p.date + 'T00:00:00').getTime() - t0) / span) * (W - PAD.l - PAD.r);
+  const sy = v => PAD.t + (1 - (v - lo) / (hi - lo)) * (H - PAD.t - PAD.b);
+  const linePts = pts.map(p => `${sx(p)},${sy(p.v)}`).join(' ');
+  const areaPath = `M${sx(pts[0])},${sy(pts[0].v)} ` + pts.map(p => `L${sx(p)},${sy(p.v)}`).join(' ') + ` L${sx(pts[pts.length-1])},${H - PAD.b} L${sx(pts[0])},${H - PAD.b} Z`;
+
+  chartEl.innerHTML = `<div class="chart-wrap">
+    <svg class="chart-svg" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="bikeGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e8c547"/><stop offset="100%" stop-color="#e8c547" stop-opacity="0"/></linearGradient></defs>
+      <text class="chart-label" x="${PAD.l - 2}" y="${PAD.t + 4}" text-anchor="end">${fmtNum(maxV)}</text>
+      <text class="chart-label" x="${PAD.l - 2}" y="${H - PAD.b}" text-anchor="end">${fmtNum(minV)}</text>
+      <path class="chart-area" style="fill:url(#bikeGrad)" d="${areaPath}"/>
+      <polyline class="chart-line" points="${linePts}"/>
+      <circle class="chart-dot" cx="${sx(pts[pts.length-1])}" cy="${sy(pts[pts.length-1].v)}" r="3"/>
+    </svg>
+    <div class="chart-range"><span>${fmtDate(pts[0].date).replace(/,.*/, '')}</span><span>${fmtDate(pts[pts.length-1].date).replace(/,.*/, '')}</span></div>
+  </div>`;
+
+  const sum = vals.reduce((a, b) => a + b, 0);
+  const avg = sum / vals.length;
+  const last = vals[vals.length - 1];
+  const best = Math.max(...vals);
+  const third = cfg.cumulative ? ['Total', withUnit(fmtNum(sum), cfg.unit)] : ['Best', withUnit(fmtNum(best), cfg.unit)];
+  const cards = [['Latest', withUnit(fmtNum(last), cfg.unit)], ['Average', withUnit(fmtNum(avg), cfg.unit)], third];
+  sumEl.innerHTML = cards.map(c => `<div class="stat-card"><div class="stat-label">${c[0]}</div><div class="stat-value" style="font-size:22px">${c[1]}</div></div>`).join('');
+}
 
 // ── WAKE LOCK ──
 let wakeLock = null;
