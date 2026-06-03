@@ -1359,13 +1359,19 @@ function suggestNext(dayIdx) {
       return { name, kind: 'time', w: '', r: tgt ? String(tgt) : '', text: tgt ? `Hold ~${tgt}s` : 'Log a hold', note: bestR ? `beat ${bestR}s` : '' };
     }
 
-    // weight exercise — anchor on the top set by e1RM
-    const top = prev.sets.reduce((b, s) => (e1rm(s.w, s.r) > e1rm(b.w, b.r) ? s : b), prev.sets[0]);
-    const topW = parseFloat(top.w) || 0;
-    const topR = parseFloat(top.r) || 0;
+    // weight exercise — anchor on the WORKING weight (the load used for the most sets, heavier
+    // wins ties), not a single heavy top set. This stops a one-off hard single from over-driving
+    // the suggestion when the actual working sets were lighter (e.g. 70 once, then 50×2).
+    const loads = prev.sets.map(s => parseFloat(s.w)).filter(x => x > 0);
+    if (!loads.length) return { name, kind: 'weight', w: '', r: String(rmin), text: `Aim ${rmin}–${rmax}`, note: '' };
+    const counts = new Map();
+    loads.forEach(x => counts.set(x, (counts.get(x) || 0) + 1));
+    let topW = loads[0], wkCount = 0;
+    counts.forEach((c, x) => { if (c > wkCount || (c === wkCount && x > topW)) { topW = x; wkCount = c; } });
+    // reps at the working weight; use the WORST set so a faded last set holds progression
+    const repsAtWk = prev.sets.filter(s => parseFloat(s.w) === topW).map(s => parseFloat(s.r) || 0);
+    const topR = repsAtWk.length ? Math.min(...repsAtWk) : 0;
     const effort = prev.effort; // 'more' | 'limit' | 'fail' | undefined
-
-    if (topW <= 0) return { name, kind: 'weight', w: '', r: String(rmin), text: `Aim ${rmin}–${rmax}`, note: '' };
 
     const hitTop = topR >= rmax;
     const belowMin = topR < rmin;
