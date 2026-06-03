@@ -1280,7 +1280,7 @@ const DAYS_CONFIG = [
     inc:  [5,5,5,5,5,5,5] },
   { label: 'Day 4', focus: 'Full Body + Bike',
     sets: ['d3-leg-press','d3-chest-press','d3-lat-pull','d3-shoulder-press','d3-ab-crunch','d3-plank'],
-    names: ['Leg Press','Chest Press','Lat Pulldown','Shoulder Press','Ab Crunch','Plank'],
+    names: ['Leg Press','Chest Press Machine','Lat Pulldown','Shoulder Press','Ab Crunch','Plank'],
     counts: [3,3,3,3,3,3],
     reps: [[10,12],[10,12],[10,12],[10,12],[12,15],[0,0]],
     inc:  [10,5,5,5,5,0] },
@@ -1775,7 +1775,6 @@ function saveWorkout(dayIdx) {
       all[idx].missed = false; // editing fills in a session; no longer a miss
       DB.set('workouts', all);
     }
-    const editedId = editingSessionId;
     exitEditMode(false);
     clearDay(dayIdx);
     renderWorkoutRefs();
