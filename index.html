@@ -2301,6 +2301,17 @@ renderWorkoutRefs();
 renderDayTabs();
 renderDash();
 
+// Tap-to-overwrite: select a field's existing value on focus so you can type straight over it
+// instead of backspacing. Number inputs ignore select() on iOS, so switch the numeric-entry
+// fields to type=text (the numeric keypad is preserved via their inputmode).
+document.querySelectorAll('.set-input, #w-weight').forEach(inp => { if (inp.type === 'number') inp.type = 'text'; });
+document.addEventListener('focusin', e => {
+  const el = e.target;
+  if (el.tagName === 'INPUT' && el.value && (el.classList.contains('set-input') || el.id === 'w-weight')) {
+    setTimeout(() => { try { el.select(); } catch (_) {} }, 0);
+  }
+});
+
 // Sync on open (merges, never blind-overwrites), and when returning to the app
 if (getCfg().token) syncNow();
 document.addEventListener('visibilitychange', () => {
